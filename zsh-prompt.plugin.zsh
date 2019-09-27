@@ -6,14 +6,16 @@ my_prompt_async_callback() {
 
 my_prompt_check_git_arrows() {
   local arrows left=${1:-0} right=${2:-0}
-  (( right > 0 )) && arrows+=${PURE_GIT_DOWN_ARROW:-⇣}
-  (( left > 0 )) && arrows+=${PURE_GIT_UP_ARROW:-⇡}
-  echo $arrows
+  (( right > 0 )) && arrows+=${PURE_GIT_DOWN_ARROW:-↓}
+  (( left > 0 )) && arrows+=${PURE_GIT_UP_ARROW:-↑}
+  if [ -n "$arrows" ]; then
+    echo " $arrows"
+  fi
 }
 
 my_prompt_async_vcs_info() {
   setopt localoptions noshwordsplit
-  cd $1
+  # cd $1
 
   zstyle ':vcs_info:*' enable git
   zstyle ':vcs_info:git:*' formats "%c%u%b"
@@ -27,15 +29,15 @@ my_prompt_async_vcs_info() {
   if [ "$RESULT" != "" ]; then
     git diff --quiet --ignore-submodules HEAD > /dev/null 2>&1
     if [ "$?" != "0" ]; then
-      RESULT="%K{red}%F{15} $RESULT"
+      RESULT="%F{red}$RESULT%f%k"
     else
-      RESULT="%K{green}%F{15} $RESULT"
+      RESULT="%F{green}$RESULT%f%k"
     fi
     local output
-    output=$(command git rev-list --left-right --count HEAD...@{'u'})
-    RESULT="$RESULT$(my_prompt_check_git_arrows "${(ps:\t:)output}") %f%k"
+    output=$(command git rev-list --left-right --count HEAD...@{'u'} 2>/dev/null)
+    RESULT="$RESULT$(my_prompt_check_git_arrows "${(ps:\t:)output}")%f%k"
   fi
-  echo "$RESULT"
+  echo "($RESULT)"
 }
 
 my_prompt_precmd_async() {
@@ -52,7 +54,7 @@ my_prompt_precmd() {
   RETVAL="$?"
   VCS_INFO=""
   my_prompt_render_right
-  my_prompt_precmd_async
+  # my_prompt_precmd_async
 }
 
 my_prompt_render_right() {
@@ -60,12 +62,13 @@ my_prompt_render_right() {
   if [ "$RETVAL" != "0" ] && [ -n "$RETVAL" ]; then
     RESULT="$RESULT %K{red}%F{15} $RETVAL %k%f"
   fi
-  RPROMPT="$RESULT"
+  # RPROMPT="$RESULT"
+  PROMPT='%F{cyan}%B$(shrink_path --tilde --last)%f%b $(my_prompt_async_vcs_info)$RESULT $ '
 }
 
 my_prompt_render_left() {
   # PROMPT='%F{cyan}$(shrink_path --fish)%f $ '
-  PROMPT='%F{cyan}$(shrink_path --tilde --last)%f $ '
+  # PROMPT='%F{cyan}%B$(shrink_path --tilde --last)%f%b $ '
 }
 
 my_prompt_reset_prompt() {
