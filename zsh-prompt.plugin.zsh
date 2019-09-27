@@ -64,7 +64,8 @@ my_prompt_render_right() {
 }
 
 my_prompt_render_left() {
-  PROMPT='%F{cyan}%~%f '
+  # PROMPT='%F{cyan}$(shrink_path --fish)%f $ '
+  PROMPT='%F{cyan}$(shrink_path --tilde --last)%f $ '
 }
 
 my_prompt_reset_prompt() {
