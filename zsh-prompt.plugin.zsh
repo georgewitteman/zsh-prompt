@@ -27,13 +27,13 @@ my_prompt_async_vcs_info() {
   if [ "$RESULT" != "" ]; then
     git diff --quiet --ignore-submodules HEAD > /dev/null 2>&1
     if [ "$?" != "0" ]; then
-      RESULT="%K{red}%F{15} $RESULT %f%k"
+      RESULT="%K{red}%F{15} $RESULT"
     else
-      RESULT="%K{green}%F{15} $RESULT %f%k"
+      RESULT="%K{green}%F{15} $RESULT"
     fi
     local output
     output=$(command git rev-list --left-right --count HEAD...@{'u'})
-    RESULT="$(my_prompt_check_git_arrows "${(ps:\t:)output}") $RESULT"
+    RESULT="$RESULT$(my_prompt_check_git_arrows "${(ps:\t:)output}") %f%k"
   fi
   echo "$RESULT"
 }
