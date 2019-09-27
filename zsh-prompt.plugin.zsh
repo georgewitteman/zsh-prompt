@@ -1,27 +1,34 @@
 my_prompt_async_callback() {
   VCS_INFO="$3"
-  # echo call from callback
   my_prompt_render_right
   my_prompt_reset_prompt
 }
 
+my_prompt_check_git_arrows() {
+  local arrows left=${1:-0} right=${2:-0}
+  (( right > 0 )) && arrows+=${PURE_GIT_DOWN_ARROW:-⇣}
+  (( left > 0 )) && arrows+=${PURE_GIT_UP_ARROW:-⇡}
+  echo $arrows
+}
+
 my_prompt_async_vcs_info() {
+  setopt localoptions noshwordsplit
   cd $1
+
   zstyle ':vcs_info:*' enable git
-  zstyle ':vcs_info:*' use-simple false
-  zstyle ':vcs_info:*' check-for-changes false
-  zstyle ':vcs_info:git:*' formats "%b"
-  zstyle ':vcs_info:git:*' actionformats "%b|%a"
+  zstyle ':vcs_info:*' check-for-changes true
+  zstyle ':vcs_info:git:*' formats "%c%u%b"
+  zstyle ':vcs_info:git:*' actionformats "%b%c%u|%a"
+  zstyle ':vcs_info:git:*' stagedstr "+"
+  zstyle ':vcs_info:git:*' unstagedstr "!"
 
   vcs_info
 
   RESULT="$vcs_info_msg_0_"
-  if [ "$vcs_info_msg_0_" != "" ]; then
-    command git diff --no-ext-diff --quiet --exit-code
-    GIT_DIRTY="$?"
-    if [ "$GIT_DIRTY" != "0" ]; then
-      RESULT="$RESULT*"
-    fi
+  if [ "$RESULT" != "" ]; then
+    local output
+    output=$(command git rev-list --left-right --count HEAD...@{'u'})
+    RESULT=$(my_prompt_check_git_arrows "${(ps:\t:)output}")"$RESULT"
   fi
   echo "$RESULT"
 }
