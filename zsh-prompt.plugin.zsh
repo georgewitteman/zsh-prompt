@@ -16,19 +16,24 @@ my_prompt_async_vcs_info() {
   cd $1
 
   zstyle ':vcs_info:*' enable git
-  zstyle ':vcs_info:*' check-for-changes true
   zstyle ':vcs_info:git:*' formats "%c%u%b"
   zstyle ':vcs_info:git:*' actionformats "%b%c%u|%a"
-  zstyle ':vcs_info:git:*' stagedstr "+"
-  zstyle ':vcs_info:git:*' unstagedstr "!"
+  # zstyle ':vcs_info:git:*' stagedstr "+"
+  # zstyle ':vcs_info:git:*' unstagedstr "!"
 
   vcs_info
 
   RESULT="$vcs_info_msg_0_"
   if [ "$RESULT" != "" ]; then
+    git diff --quiet --ignore-submodules HEAD > /dev/null 2>&1
+    if [ "$?" != "0" ]; then
+      RESULT="%K{red}%F{15} $RESULT %f%k"
+    else
+      RESULT="%K{green}%F{15} $RESULT %f%k"
+    fi
     local output
     output=$(command git rev-list --left-right --count HEAD...@{'u'})
-    RESULT=$(my_prompt_check_git_arrows "${(ps:\t:)output}")"$RESULT"
+    RESULT="$(my_prompt_check_git_arrows "${(ps:\t:)output}") $RESULT"
   fi
   echo "$RESULT"
 }
@@ -59,7 +64,7 @@ my_prompt_render_right() {
 }
 
 my_prompt_render_left() {
-  PROMPT='%F{110}%~%f %# '
+  PROMPT='%F{cyan}%~%f '
 }
 
 my_prompt_reset_prompt() {
