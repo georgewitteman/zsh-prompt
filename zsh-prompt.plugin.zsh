@@ -36,6 +36,10 @@ my_prompt_async_vcs_info() {
     local output
     output=$(command git rev-list --left-right --count HEAD...@{'u'} 2>/dev/null)
     RESULT="$RESULT$(my_prompt_check_git_arrows "${(ps:\t:)output}")%f%k"
+    git rev-parse --verify --quiet refs/stash >/dev/null
+    if [ "$?" = "0" ]; then
+      RESULT="\$$RESULT"
+    fi
   fi
   echo "($RESULT)"
 }
