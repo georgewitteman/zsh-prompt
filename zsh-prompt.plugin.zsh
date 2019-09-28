@@ -1,9 +1,3 @@
-my_prompt_async_callback() {
-  VCS_INFO="$3"
-  my_prompt_render_right
-  my_prompt_reset_prompt
-}
-
 my_prompt_check_git_arrows() {
   local arrows left=${1:-0} right=${2:-0}
   (( right > 0 )) && arrows+=${PURE_GIT_DOWN_ARROW:-↓}
@@ -40,53 +34,23 @@ my_prompt_async_vcs_info() {
     if [ "$?" = "0" ]; then
       RESULT="\$$RESULT"
     fi
+    RESULT="($RESULT)"
   fi
-  echo "($RESULT)"
-}
-
-my_prompt_precmd_async() {
-  if [ !${my_prompt_async_init:-0} ]; then
-    async_start_worker "my_prompt" -u -n
-    async_register_callback "my_prompt" my_prompt_async_callback
-    typeset -g my_prompt_async_init=1
-  fi
-
-  async_job "my_prompt" my_prompt_async_vcs_info $PWD
+  echo "$RESULT"
 }
 
 my_prompt_precmd() {
   RETVAL="$?"
   VCS_INFO=""
-  my_prompt_render_right
-  # my_prompt_precmd_async
+  my_prompt_render
 }
 
-my_prompt_render_right() {
+my_prompt_render() {
   RESULT="%F{250}$VCS_INFO%f"
   if [ "$RETVAL" != "0" ] && [ -n "$RETVAL" ]; then
     RESULT="$RESULT %K{red}%F{15} $RETVAL %k%f"
   fi
-  # RPROMPT="$RESULT"
-  PROMPT='%F{cyan}%B$(shrink_path --tilde --last)%f%b $(my_prompt_async_vcs_info)$RESULT $ '
-}
-
-my_prompt_render_left() {
-  # PROMPT='%F{cyan}$(shrink_path --fish)%f $ '
-  # PROMPT='%F{cyan}%B$(shrink_path --tilde --last)%f%b $ '
-}
-
-my_prompt_reset_prompt() {
-  if [[ $CONTEXT == cont ]]; then
-    # When the context is "cont", PS2 is active and calling
-    # reset-prompt will have no effect on PS1, but it will
-    # reset the execution context (%_) of PS2 which we don't
-    # want. Unfortunately, we can't save the output of "%_"
-    # either because it is only ever rendered as part of the
-    # prompt, expanding in-place won't work.
-    return
-  fi
-
-  zle && zle .reset-prompt
+  PROMPT='%F{cyan}%B$(shrink_path --tilde --last)%f%b $(my_prompt_async_vcs_info)$RESULT %% '
 }
 
 my_prompt_setup() {
@@ -95,8 +59,7 @@ my_prompt_setup() {
   autoload -Uz add-zsh-hook
   autoload -Uz vcs_info
   add-zsh-hook precmd my_prompt_precmd
-  my_prompt_render_left
-  my_prompt_render_right
+  my_prompt_render
 }
 
 my_prompt_setup
