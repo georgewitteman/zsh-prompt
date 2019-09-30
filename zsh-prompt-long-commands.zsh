@@ -28,6 +28,9 @@ zlong_alert_pre() {
 }
 
 zlong_alert_post() {
+  if [ -z "$zlong_timestamp" ]; then
+    return
+  fi
   LONG_COMMAND=
   local duration=$(($EPOCHSECONDS - $zlong_timestamp))
   local lasted_long=$(($duration - $zlong_duration))
@@ -35,6 +38,8 @@ zlong_alert_post() {
   if [ $lasted_long -gt 0 ] && [ ! -z $zlong_last_cmd ] && [ ! ${zlong_ignore_cmds[(ie)$cmd_head]} -le ${#zlong_ignore_cmds} ]; then
     LONG_COMMAND="$(human_time $duration)"
   fi
+  unset zlong_timestamp
+  unset zlong_last_cmd
 }
 
 add-zsh-hook preexec zlong_alert_pre
