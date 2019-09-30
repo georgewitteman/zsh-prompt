@@ -15,9 +15,9 @@ function gitstatus_prompt_update() {
   gitstatus_query 'MY'                  || return 1  # error
   [[ $VCS_STATUS_RESULT == 'ok-sync' ]] || return 0  # not a git repo
 
-  local      clean='%F{magenta}'   # green foreground
-  local   modified='%F{yellow}'  # yellow foreground
-  local  untracked='%F{blue}'   # blue foreground
+  local clean='%F{magenta}'   # green foreground
+  local modified='%F{yellow}'  # yellow foreground
+  local untracked='%F{blue}'   # blue foreground
   local conflicted='%F{red}'  # red foreground
 
   local before
@@ -64,20 +64,29 @@ function gitstatus_prompt_update() {
   GITSTATUS_PROMPT_LEN="${(m)#${${GITSTATUS_PROMPT//\%\%/x}//\%(f|<->F)}}"
 }
 
+jobscount() {
+  JOBSCOUNT="%(1j. %F{15}%K{yellow} %j %f%k.)"
+}
+
 my_prompt_precmd() {
   RETVAL="$?"
   VCS_INFO=""
   gitstatus_prompt_update
+  jobscount
   my_prompt_render
 }
 
 my_prompt_render() {
+  PVENV=
   result=
   if [ "$RETVAL" != "0" ] && [ -n "$RETVAL" ]; then
-    result="%K{red}%F{15} $RETVAL %k%f"
+    result=" %K{red}%F{15} $RETVAL %k%f"
   fi
-  PROMPT='%F{cyan}%B%~%f%b$GITSTATUS_PROMPT %% '
-  RPROMPT='$result'
+  if [ "$VIRTUAL_ENV" != "" ]; then
+    PVENV="$(basename "$VIRTUAL_ENV") "
+  fi
+  PROMPT='%F{244}${PVENV}%f%F{cyan}%B%~%f%b$GITSTATUS_PROMPT %% '
+  RPROMPT='$JOBSCOUNT$result'
 }
 
 my_prompt_render
