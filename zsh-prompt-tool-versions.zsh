@@ -10,7 +10,7 @@ recursively_find_file() {
   file_name=$1
   found_dir=$PWD
   while [ ! -e "$found_dir/$file_name" ] && [ "$found_dir" != '/' ]; do
-    found_dir $(dirname "$found_dir")
+    found_dir=$(dirname "$found_dir")
   done
   echo "$found_dir/$file_name"
 }
@@ -25,7 +25,7 @@ get_tool_version_if_not_default() {
   name=$1
   file_name=$2
   versions_file=$(recursively_find_file $file_name)
-  [ "$versions_file" != "$HOME/$file_name" ] && parse_tool_versions $name $file_name
+  [ "$versions_file" != "$HOME/$file_name" ] && parse_tool_versions $name $versions_file
 }
 
 get_node_version() {

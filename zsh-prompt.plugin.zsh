@@ -6,6 +6,7 @@ MY_PROMPT_DIR="${0:a:h}"
 
 source "$MY_PROMPT_DIR/zsh-prompt-nice-exit-code.zsh"
 source "$MY_PROMPT_DIR/zsh-prompt-gitstatus.zsh"
+source "$MY_PROMPT_DIR/zsh-prompt-shrink-path.zsh"
 source "$MY_PROMPT_DIR/zsh-prompt-tool-versions.zsh"
 
 gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
@@ -13,7 +14,7 @@ gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
 type should_drink >/dev/null 2>&1 && HYDRATE_INSTALLED=1
 
 jobscount() {
-  JOBSCOUNT="%(1j. %F{15}%K{yellow} %j %f%k.)"
+  JOBSCOUNT="%(1j. %F{yellow}%j:bg%f%k.)"
 }
 
 my_prompt_precmd() {
@@ -28,29 +29,30 @@ my_prompt_precmd() {
 
 my_prompt_render() {
   PVENV=
+  PROMPT_CHAR="%%"
   exit_code=
   if [ "$RETVAL" != "0" ] && [ -n "$RETVAL" ]; then
+    PROMPT_CHAR="%F{red}$PROMPT_CHAR%f"
     nice_code=$(nice_exit_code "$RETVAL")
     if [ "$nice_code" != "" ]; then
-      exit_code=" %K{red}%F{15} $nice_code ($RETVAL) %k%f"
+      exit_code=" %F{red}$nice_code($RETVAL)%k%f"
     else
-      exit_code=" %K{red}%F{15} $RETVAL %k%f"
+      exit_code=" %F{red}$RETVAL%k%f"
     fi
   fi
   if [ "$VIRTUAL_ENV" != "" ]; then
     PVENV="$(basename "$VIRTUAL_ENV") "
   fi
   PYTHON_VERSION=$(get_python_version)
-  # echo $PYTHON_VERSION
   if [ "$PYTHON_VERSION" != "" ]; then
-    PYTHON_PROMPT=" %F{yellow}py $PYTHON_VERSION%f"
+    PYTHON_PROMPT=" %F{yellow}python:$PYTHON_VERSION%f"
   fi
   NODEJS_VERSION=$(get_node_version)
   if [ "$NODEJS_VERSION" != "" ]; then
-    NODEJS_PROMPT=" %F{green}⬢ $NODEJS_VERSION%f"
+    NODEJS_PROMPT=" %F{green}node:$NODEJS_VERSION%f"
   fi
-  PROMPT='%F{244}${PVENV}%f%F{cyan}%B%~%f%b$GITSTATUS_PROMPT $PROMPT_DRINK%% '
-  RPROMPT='$PYTHON_PROMPT$NODEJS_PROMPT$JOBSCOUNT$exit_code'
+  PROMPT='%F{244}${PVENV}%f%F{cyan}%B$(shrink_path --last --tilde)%f%b$GITSTATUS_PROMPT$JOBSCOUNT $PROMPT_DRINK$PROMPT_CHAR '
+  RPROMPT='$exit_code$PYTHON_PROMPT$NODEJS_PROMPT'
 }
 
 my_prompt_render
