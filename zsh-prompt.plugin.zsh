@@ -30,6 +30,8 @@ my_prompt_precmd() {
 my_prompt_render() {
   PVENV=
   PROMPT_CHAR="%%"
+  NODEJS_PROMPT=
+  PYTHON_PROMPT=
   exit_code=
   if [ "$RETVAL" != "0" ] && [ -n "$RETVAL" ]; then
     PROMPT_CHAR="%F{red}$PROMPT_CHAR%f"
