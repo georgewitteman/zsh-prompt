@@ -6,6 +6,7 @@ MY_PROMPT_DIR="${0:a:h}"
 
 source "$MY_PROMPT_DIR/zsh-prompt-nice-exit-code.zsh"
 source "$MY_PROMPT_DIR/zsh-prompt-gitstatus.zsh"
+source "$MY_PROMPT_DIR/zsh-prompt-long-commands.zsh"
 source "$MY_PROMPT_DIR/zsh-prompt-shrink-path.zsh"
 source "$MY_PROMPT_DIR/zsh-prompt-tool-versions.zsh"
 
@@ -22,6 +23,7 @@ my_prompt_precmd() {
   typeset -g PROMPT_DRINK=''
   VCS_INFO=""
   [ "$HYDRATE_INSTALLED" != "0" ] && PROMPT_DRINK="$(drink_water)"
+  zlong_alert_post
   gitstatus_prompt_update
   jobscount
   my_prompt_render
@@ -29,10 +31,15 @@ my_prompt_precmd() {
 
 my_prompt_render() {
   PVENV=
+  LONG_COMMAND_PROMPT=
   PROMPT_CHAR="%%"
   NODEJS_PROMPT=
   PYTHON_PROMPT=
   exit_code=
+  if [ "$LONG_COMMAND" != "" ]; then
+    PROMPT_CHAR="%F{yellow}$PROMPT_CHAR%f"
+    LONG_COMMAND_PROMPT=" %F{red}$LONG_COMMAND%f"
+  fi
   if [ "$RETVAL" != "0" ] && [ -n "$RETVAL" ]; then
     PROMPT_CHAR="%F{red}$PROMPT_CHAR%f"
     nice_code=$(nice_exit_code "$RETVAL")
@@ -54,7 +61,7 @@ my_prompt_render() {
     NODEJS_PROMPT=" %F{green}node:$NODEJS_VERSION%f"
   fi
   PROMPT='%F{244}${PVENV}%f%F{cyan}%B$(shrink_path --last --tilde)%f%b$GITSTATUS_PROMPT$JOBSCOUNT $PROMPT_DRINK$PROMPT_CHAR '
-  RPROMPT='$exit_code$PYTHON_PROMPT$NODEJS_PROMPT'
+  RPROMPT='$LONG_COMMAND_PROMPT$exit_code$PYTHON_PROMPT$NODEJS_PROMPT'
 }
 
 my_prompt_render
