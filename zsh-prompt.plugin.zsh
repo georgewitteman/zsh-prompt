@@ -6,6 +6,7 @@ MY_PROMPT_DIR="${0:a:h}"
 
 source "$MY_PROMPT_DIR/zsh-prompt-nice-exit-code.zsh"
 source "$MY_PROMPT_DIR/zsh-prompt-gitstatus.zsh"
+source "$MY_PROMPT_DIR/zsh-prompt-tool-versions.zsh"
 
 gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
 
@@ -39,8 +40,17 @@ my_prompt_render() {
   if [ "$VIRTUAL_ENV" != "" ]; then
     PVENV="$(basename "$VIRTUAL_ENV") "
   fi
+  PYTHON_VERSION=$(get_python_version)
+  # echo $PYTHON_VERSION
+  if [ "$PYTHON_VERSION" != "" ]; then
+    PYTHON_PROMPT=" %F{yellow}py $PYTHON_VERSION%f"
+  fi
+  NODEJS_VERSION=$(get_node_version)
+  if [ "$NODEJS_VERSION" != "" ]; then
+    NODEJS_PROMPT=" %F{green}⬢ $NODEJS_VERSION%f"
+  fi
   PROMPT='%F{244}${PVENV}%f%F{cyan}%B%~%f%b$GITSTATUS_PROMPT $PROMPT_DRINK%% '
-  RPROMPT='$JOBSCOUNT$exit_code'
+  RPROMPT='$PYTHON_PROMPT$NODEJS_PROMPT$JOBSCOUNT$exit_code'
 }
 
 my_prompt_render
