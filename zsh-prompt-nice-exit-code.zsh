@@ -1,5 +1,5 @@
 nice_exit_code() {
-  local exit_status="${1:-$(print -P %?)}";
+  local exit_status="$1";
   # nothing to do here
   [[ -z $exit_status || $exit_status == 0 ]] && return;
 
