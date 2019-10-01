@@ -1,18 +1,18 @@
 MY_PROMPT_DIR="${0:a:h}"
 
-# autoload -Uz zle
-# autoload -U colors && colors
-
 source "$MY_PROMPT_DIR/zsh-prompt-nice-exit-code.zsh"
 source "$MY_PROMPT_DIR/zsh-prompt-gitstatus.zsh"
 source "$MY_PROMPT_DIR/zsh-prompt-tool-versions.zsh"
 
 gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
 
+type should_drink >/dev/null 2>&1 && HYDRATE_INSTALLED=1
+
 PS_NICE_EXIT_CODE=1
 PS_VIRTUAL_ENV=2
 PS_PYTHON_VERSION=3
 PS_NODE_VERSION=4
+PS_HYDRATE=5
 
 # Git stuff
 PS_GIT_LOADED=8
@@ -60,20 +60,41 @@ gitstatus_callback() {
 }
 
 precmd() {
+  # echo start precmd $EPOCHREALTIME
   return_code=$(print -P "%?")
+  # echo after return code before exit code $EPOCHREALTIME
   # psvar=()
   psvar[$PS_NICE_EXIT_CODE]=$(nice_exit_code $return_code)
+  # echo after exit code before virtual env $EPOCHREALTIME
   if [ "$VIRTUAL_ENV" != "" ]; then
     psvar[$PS_VIRTUAL_ENV]="$(basename "$VIRTUAL_ENV") "
   else
     psvar[$PS_VIRTUAL_ENV]=""
   fi
+  # echo after virtual env $EPOCHREALTIME
 
-  psvar[$PS_PYTHON_VERSION]=$(get_python_version)
-  psvar[$PS_NODE_VERSION]=$(get_node_version)
+  get_python_version
+  psvar[$PS_PYTHON_VERSION]=$retval
+  get_node_version
+  psvar[$PS_NODE_VERSION]=$retval
+  # psvar[$PS_PYTHON_VERSION]=$(get_python_version)
+  # psvar[$PS_NODE_VERSION]=$(get_node_version)
 
+  # echo before hydrate $EPOCHREALTIME
+  if [ "$HYDRATE_INSTALLED" != "0" ]; then
+    should_drink
+    if [ "$SHOULD_DRINK" != "0" ]; then
+      psvar[$PS_HYDRATE]="Time to drink!"
+    else
+      psvar[$PS_HYDRATE]=""
+    fi
+  fi
+  # echo after hydratei $EPOCHREALTIME
+
+  # echo before gitstatus_query $EPOCHREALTIME
   psvar[$PS_GIT_LOADED]=""
   [ -z "$VCS_STATUS_RESULT" ] && gitstatus_query -d $PWD -c gitstatus_callback -t 0 'MY'
+  # echo after gitstatus_query $EPOCHREALTIME
 }
 
 build_git_prompt() {
@@ -130,6 +151,7 @@ PROMPT+="%(${PS_VIRTUAL_ENV}V.%F{247}%${PS_VIRTUAL_ENV}v %f.)"
 PROMPT+="%B%F{cyan}%~%b%f" # Path
 PROMPT+="$(build_git_prompt)"
 PROMPT+="%(1j. %F{yellow}%j:bg%f.)" # Jobs
+PROMPT+="%(${PS_HYDRATE}v. %F{blue}%${PS_HYDRATE}v%f.)"
 PROMPT+="%(0?..%F{red}) %#%f " # Prompt char (red if last non-zero exit status)
 
 # Right prompt
