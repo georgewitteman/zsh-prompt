@@ -1,18 +1,34 @@
 MY_PROMPT_DIR="${0:a:h}"
 
+_TLAST=$(($EPOCHREALTIME*1000000))
 source "$MY_PROMPT_DIR/zsh-prompt-nice-exit-code.zsh"
+echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
+_TLAST=$(($EPOCHREALTIME*1000000))
 source "$MY_PROMPT_DIR/zsh-prompt-gitstatus.zsh"
+echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
+_TLAST=$(($EPOCHREALTIME*1000000))
 source "$MY_PROMPT_DIR/zsh-prompt-tool-versions.zsh"
+echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
+_TLAST=$(($EPOCHREALTIME*1000000))
+source "$MY_PROMPT_DIR/zsh-prompt-shrink-path.zsh"
+echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
+_TLAST=$(($EPOCHREALTIME*1000000))
 
 gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
+# gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
+echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
+_TLAST=$(($EPOCHREALTIME*1000000))
 
 type should_drink >/dev/null 2>&1 && HYDRATE_INSTALLED=1
+echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
+_TLAST=$(($EPOCHREALTIME*1000000))
 
 PS_NICE_EXIT_CODE=1
 PS_VIRTUAL_ENV=2
 PS_PYTHON_VERSION=3
 PS_NODE_VERSION=4
 PS_HYDRATE=5
+PS_DIR=6
 
 # Git stuff
 PS_GIT_LOADED=8
@@ -62,6 +78,7 @@ gitstatus_callback() {
 precmd() {
   # echo start precmd $EPOCHREALTIME
   return_code=$(print -P "%?")
+  psvar[$PS_DIR]=$(shrink_path --last --tilde)
   # echo after return code before exit code $EPOCHREALTIME
   # psvar=()
   psvar[$PS_NICE_EXIT_CODE]=$(nice_exit_code $return_code)
@@ -110,6 +127,15 @@ build_git_prompt() {
     echo -n "%($condition.$iftrue.$iffalse)"
   }
 
+  $C_LOADING="241"
+  $C_DEFAULT="%F{%(${PS_GIT_LOADED}V.default.$C_LOADING)}"
+  $C_MAGENTA="%F{%(${PS_GIT_LOADED}V.magenta.$C_LOADING)}"
+  $C_RED="%F{%(${PS_GIT_LOADED}V.red.$C_LOADING)}"
+  $C_GREEN="%F{%(${PS_GIT_LOADED}V.green.$C_LOADING)}"
+  $C_BLUE="%F{%(${PS_GIT_LOADED}V.blue.$C_LOADING)}"
+  $C_YELLOW="%F{%(${PS_GIT_LOADED}V.yellow.$C_LOADING)}"
+
+  # O_PAREN="${C_DEFAULT}(%f"
   O_PAREN="$(ccolor default "(")"
   C_PAREN="$(ccolor default ")")"
   SEP="$(ccolor default "|")"
@@ -124,7 +150,6 @@ build_git_prompt() {
   echo -n "%(${PS_COMMITS_AHEAD}V.$(ccolor default "↑").)"
 
   # Separator
-  # echo -n "%(${PS_STATUS_ACTION}V.)"
   pif "${PS_STATUS_ACTION}V" "$SEP" $( \
     pif "${PS_NUM_CONFLICTED}V" "$SEP" $( \
     pif "${PS_NUM_STAGED}V" "$SEP" $( \
@@ -145,13 +170,27 @@ build_git_prompt() {
 
 VIRTUAL_ENV_DISABLE_PROMPT=1
 
-# Left prompt
+echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
+_TLAST=$(($EPOCHREALTIME*1000000))
 PROMPT=""
+echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
+_TLAST=$(($EPOCHREALTIME*1000000))
 PROMPT+="%(${PS_VIRTUAL_ENV}V.%F{247}%${PS_VIRTUAL_ENV}v %f.)"
-PROMPT+="%B%F{cyan}%~%b%f" # Path
+echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
+_TLAST=$(($EPOCHREALTIME*1000000))
+# PROMPT+="%B%F{cyan}%~%b%f" # Path
+PROMPT+="%B%F{cyan}%${PS_DIR}v%b%f" # Path
+echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
+_TLAST=$(($EPOCHREALTIME*1000000))
 PROMPT+="$(build_git_prompt) "
+echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
+_TLAST=$(($EPOCHREALTIME*1000000))
 PROMPT+="%(1j.%F{yellow}%j:bg%f .)" # Jobs
+echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
+_TLAST=$(($EPOCHREALTIME*1000000))
 PROMPT+="%(${PS_HYDRATE}V.%F{blue}%${PS_HYDRATE}v%f .)"
+echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
+_TLAST=$(($EPOCHREALTIME*1000000))
 PROMPT+="%(0?..%F{red})%#%f " # Prompt char (red if last non-zero exit status)
 
 # Right prompt
