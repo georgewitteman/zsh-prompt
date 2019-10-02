@@ -1,27 +1,12 @@
 MY_PROMPT_DIR="${0:a:h}"
 
-_TLAST=$(($EPOCHREALTIME*1000000))
 source "$MY_PROMPT_DIR/zsh-prompt-nice-exit-code.zsh"
-echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
-_TLAST=$(($EPOCHREALTIME*1000000))
-source "$MY_PROMPT_DIR/zsh-prompt-gitstatus.zsh"
-echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
-_TLAST=$(($EPOCHREALTIME*1000000))
 source "$MY_PROMPT_DIR/zsh-prompt-tool-versions.zsh"
-echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
-_TLAST=$(($EPOCHREALTIME*1000000))
 source "$MY_PROMPT_DIR/zsh-prompt-shrink-path.zsh"
-echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
-_TLAST=$(($EPOCHREALTIME*1000000))
 
 gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
-# gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
-echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
-_TLAST=$(($EPOCHREALTIME*1000000))
 
 type should_drink >/dev/null 2>&1 && HYDRATE_INSTALLED=1
-echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
-_TLAST=$(($EPOCHREALTIME*1000000))
 
 PS_NICE_EXIT_CODE=1
 PS_VIRTUAL_ENV=2
@@ -77,11 +62,16 @@ gitstatus_callback() {
 
 precmd() {
   # echo start precmd $EPOCHREALTIME
-  return_code=$(print -P "%?")
-  psvar[$PS_DIR]=$(shrink_path --last --tilde)
+  # return_code=$(print -P "%?")
+  return_code=$?
+  shrink_path
+  # shrink_path --last --tilde
+  # shrink_path --last
+  psvar[$PS_DIR]="$RETVAL"
   # echo after return code before exit code $EPOCHREALTIME
   # psvar=()
-  psvar[$PS_NICE_EXIT_CODE]=$(nice_exit_code $return_code)
+  nice_exit_code $return_code
+  psvar[$PS_NICE_EXIT_CODE]="$RETVAL"
   # echo after exit code before virtual env $EPOCHREALTIME
   if [ "$VIRTUAL_ENV" != "" ]; then
     psvar[$PS_VIRTUAL_ENV]="$(basename "$VIRTUAL_ENV") "
@@ -115,82 +105,56 @@ precmd() {
 }
 
 build_git_prompt() {
-  ccolor() {
-    echo -n "%F{%(${PS_GIT_LOADED}V.$1.241)}$2%f"
-  }
+  C_LOADING="241"
+  C_DEFAULT="%F{%(${PS_GIT_LOADED}V.default.$C_LOADING)}"
+  C_MAGENTA="%F{%(${PS_GIT_LOADED}V.magenta.$C_LOADING)}"
+  C_RED="%F{%(${PS_GIT_LOADED}V.red.$C_LOADING)}"
+  C_GREEN="%F{%(${PS_GIT_LOADED}V.green.$C_LOADING)}"
+  C_BLUE="%F{%(${PS_GIT_LOADED}V.blue.$C_LOADING)}"
+  C_YELLOW="%F{%(${PS_GIT_LOADED}V.yellow.$C_LOADING)}"
 
-  pif() {
-    condition=$1
-    iftrue=$2
-    iffalse=$3
+  O_PAREN="${C_DEFAULT}(%f"
+  C_PAREN="${C_DEFAULT})%f"
+  SEP="${C_DEFAULT}|%f"
+  BRANCH_NAME="${C_MAGENTA}%B%${PS_LOCAL_BRANCH}v%b%f"
+  TAG="${C_DEFAULT}#%f${C_MAGENTA}%${PS_TAG}v%f"
+  COMMIT_HASH="${C_DEFAULT}@%f${C_MAGENTA}%${PS_COMMIT}v%f"
 
-    echo -n "%($condition.$iftrue.$iffalse)"
-  }
-
-  $C_LOADING="241"
-  $C_DEFAULT="%F{%(${PS_GIT_LOADED}V.default.$C_LOADING)}"
-  $C_MAGENTA="%F{%(${PS_GIT_LOADED}V.magenta.$C_LOADING)}"
-  $C_RED="%F{%(${PS_GIT_LOADED}V.red.$C_LOADING)}"
-  $C_GREEN="%F{%(${PS_GIT_LOADED}V.green.$C_LOADING)}"
-  $C_BLUE="%F{%(${PS_GIT_LOADED}V.blue.$C_LOADING)}"
-  $C_YELLOW="%F{%(${PS_GIT_LOADED}V.yellow.$C_LOADING)}"
-
-  # O_PAREN="${C_DEFAULT}(%f"
-  O_PAREN="$(ccolor default "(")"
-  C_PAREN="$(ccolor default ")")"
-  SEP="$(ccolor default "|")"
-  BRANCH_NAME="$(ccolor magenta "%B%${PS_LOCAL_BRANCH}v%b")"
-  TAG="$(ccolor default "#")$(ccolor magenta "%${PS_TAG}v")"
-  COMMIT_HASH="$(ccolor default "@")$(ccolor magenta "%${PS_COMMIT}v")"
-
-  echo -n "%(${PS_GIT_REPO}V." # if we have a git prompt
-  echo -n " $O_PAREN" # prefix
-  echo -n "%(${PS_LOCAL_BRANCH}V.$BRANCH_NAME.%(${PS_TAG}V.$TAG.$COMMIT_HASH))"
-  echo -n "%(${PS_COMMITS_BEHIND}V.$(ccolor default "↓").)"
-  echo -n "%(${PS_COMMITS_AHEAD}V.$(ccolor default "↑").)"
+  RETVAL=''
+  RETVAL+="%(${PS_GIT_REPO}V." # if we have a git prompt
+  RETVAL+=" $O_PAREN" # prefix
+  RETVAL+="%(${PS_LOCAL_BRANCH}V.$BRANCH_NAME.%(${PS_TAG}V.$TAG.$COMMIT_HASH))"
+  RETVAL+="%(${PS_COMMITS_BEHIND}V.${C_DEFAULT}↓%f.)"
+  RETVAL+="%(${PS_COMMITS_AHEAD}V.${C_DEFAULT}↑%f.)"
 
   # Separator
-  pif "${PS_STATUS_ACTION}V" "$SEP" $( \
-    pif "${PS_NUM_CONFLICTED}V" "$SEP" $( \
-    pif "${PS_NUM_STAGED}V" "$SEP" $( \
-    pif "${PS_NUM_UNSTAGED}V" "$SEP" $( \
-    pif "${PS_NUM_UNTRACKED}V" "$SEP" $( \
-    pif "${PS_STASHES}V" "$SEP" ""\
-    )))))
+  RETVAL+="%(${PS_STATUS_ACTION}V.$SEP."
+  RETVAL+="%(${PS_NUM_CONFLICTED}V.$SEP."
+  RETVAL+="%(${PS_NUM_STAGED}V.$SEP."
+  RETVAL+="%(${PS_NUM_UNSTAGED}V.$SEP."
+  RETVAL+="%(${PS_NUM_UNTRACKED}V.$SEP."
+  RETVAL+="%(${PS_STASHES}V.$SEP."
+  RETVAL+="))))))"
 
-  echo -n "%(${PS_STATUS_ACTION}V.$(ccolor red "%${PS_STATUS_ACTION}v").)"
-  echo -n "%(${PS_NUM_CONFLICTED}V.$(ccolor magenta "✖%${PS_NUM_CONFLICTED}v").)"
-  echo -n "%(${PS_NUM_STAGED}V.$(ccolor green "✚%${PS_NUM_STAGED}v").)"
-  echo -n "%(${PS_NUM_UNSTAGED}V.$(ccolor red "✚%${PS_NUM_UNSTAGED}v").)"
-  echo -n "%(${PS_NUM_UNTRACKED}V.$(ccolor blue "…%${PS_NUM_UNTRACKED}v").)"
-  echo -n "%(${PS_STASHES}V.$(ccolor yellow "!%${PS_STASHES}v").)"
-  echo -n "$C_PAREN" # suffix
-  echo -n ".)" # if no git prompt don't display anything
+  RETVAL+="%(${PS_STATUS_ACTION}V.${C_RED}%${PS_STATUS_ACTION}v%f.)"
+  RETVAL+="%(${PS_NUM_CONFLICTED}V.${C_MAGENTA}✖%${PS_NUM_CONFLICTED}v%f.)"
+  RETVAL+="%(${PS_NUM_STAGED}V.${C_GREEN}✚%${PS_NUM_STAGED}v%f.)"
+  RETVAL+="%(${PS_NUM_UNSTAGED}V.${C_RED}✚%${PS_NUM_UNSTAGED}v%f.)"
+  RETVAL+="%(${PS_NUM_UNTRACKED}V.${C_BLUE}…%${PS_NUM_UNTRACKED}v%f.)"
+  RETVAL+="%(${PS_STASHES}V.${C_YELLOW}!%${PS_STASHES}v%f.)"
+  RETVAL+="$C_PAREN" # suffix
+  RETVAL+=".)" # if no git prompt don't display anything
 }
 
 VIRTUAL_ENV_DISABLE_PROMPT=1
 
-echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
-_TLAST=$(($EPOCHREALTIME*1000000))
 PROMPT=""
-echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
-_TLAST=$(($EPOCHREALTIME*1000000))
 PROMPT+="%(${PS_VIRTUAL_ENV}V.%F{247}%${PS_VIRTUAL_ENV}v %f.)"
-echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
-_TLAST=$(($EPOCHREALTIME*1000000))
-# PROMPT+="%B%F{cyan}%~%b%f" # Path
 PROMPT+="%B%F{cyan}%${PS_DIR}v%b%f" # Path
-echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
-_TLAST=$(($EPOCHREALTIME*1000000))
-PROMPT+="$(build_git_prompt) "
-echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
-_TLAST=$(($EPOCHREALTIME*1000000))
+build_git_prompt
+PROMPT+="$RETVAL "
 PROMPT+="%(1j.%F{yellow}%j:bg%f .)" # Jobs
-echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
-_TLAST=$(($EPOCHREALTIME*1000000))
 PROMPT+="%(${PS_HYDRATE}V.%F{blue}%${PS_HYDRATE}v%f .)"
-echo $(($(($EPOCHREALTIME*1000000)) - $_TLAST))
-_TLAST=$(($EPOCHREALTIME*1000000))
 PROMPT+="%(0?..%F{red})%#%f " # Prompt char (red if last non-zero exit status)
 
 # Right prompt

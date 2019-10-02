@@ -37,7 +37,7 @@ get_tool_version_if_not_default() {
 
 get_node_version() {
   unset retval
-  get_tool_version_if_not_default nodejs .tool-versions
+  # get_tool_version_if_not_default nodejs .tool-versions
   # current_version=$retval
   # current_version=$(get_tool_version_if_not_default nodejs .tool-versions)
   # [ "$current_version" != "" ] && echo "$current_version"
@@ -48,7 +48,7 @@ get_python_version() {
   if [ "$VIRTUAL_ENV" != "" ]; then
     retval=${${(ps: :)$(python --version 2>&1)}[2]}
   else
-    get_tool_version_if_not_default python .tool-versions
+    # get_tool_version_if_not_default python .tool-versions
     # current_version=$retval
     # current_version=$(get_tool_version_if_not_default python .tool-versions)
     # [ "$current_version" != "" ] && retval="$current_version"

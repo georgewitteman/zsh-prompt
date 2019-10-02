@@ -1,42 +1,27 @@
 nice_exit_code() {
+  unset RETVAL
   local exit_status="$1";
-  # nothing to do here
   [[ -z $exit_status || $exit_status == 0 ]] && return;
 
-  local sig_name;
-
-  # is this a signal name (error code = signal + 128) ?
   case $exit_status in
-    129)  sig_name=HUP ;;
-    130)  sig_name=INT ;;
-    131)  sig_name=QUIT ;;
-    132)  sig_name=ILL ;;
-    134)  sig_name=ABRT ;;
-    136)  sig_name=FPE ;;
-    137)  sig_name=KILL ;;
-    139)  sig_name=SEGV ;;
-    141)  sig_name=PIPE ;;
-    143)  sig_name=TERM ;;
+    129)  RETVAL=HUP && return ;;
+    130)  RETVAL=INT && return ;;
+    131)  RETVAL=QUIT && return ;;
+    132)  RETVAL=ILL && return ;;
+    134)  RETVAL=ABRT && return ;;
+    136)  RETVAL=FPE && return ;;
+    137)  RETVAL=KILL && return ;;
+    139)  RETVAL=SEGV && return ;;
+    141)  RETVAL=PIPE && return ;;
+    143)  RETVAL=TERM && return ;;
+    -1)   RETVAL=FATAL && return ;;
+    1)    RETVAL=WARN && return ;; # Miscellaneous errors, such as "divide by zero"
+    2)    RETVAL=BUILTINMISUSE && return ;; # misuse of shell builtins (pretty rare)
+    126)  RETVAL=CCANNOTINVOKE && return ;; # cannot invoke requested command (ex : source script_with_syntax_error)
+    127)  RETVAL=CNOTFOUND && return ;; # command not found (ex : source script_not_existing)
+    19)  RETVAL=STOP && return ;;
+    20)  RETVAL=TSTP && return ;;
+    21)  RETVAL=TTIN && return ;;
+    22)  RETVAL=TTOU && return ;;
   esac
-
-  # usual exit codes
-  case $exit_status in
-    -1)   sig_name=FATAL ;;
-    1)    sig_name=WARN ;; # Miscellaneous errors, such as "divide by zero"
-    2)    sig_name=BUILTINMISUSE ;; # misuse of shell builtins (pretty rare)
-    126)  sig_name=CCANNOTINVOKE ;; # cannot invoke requested command (ex : source script_with_syntax_error)
-    127)  sig_name=CNOTFOUND ;; # command not found (ex : source script_not_existing)
-  esac
-
-  # assuming we are on an x86 system here
-  # this MIGHT get annoying since those are in a range of exit codes
-  # programs sometimes use.... we'll see.
-  case $exit_status in
-    19)  sig_name=STOP ;;
-    20)  sig_name=TSTP ;;
-    21)  sig_name=TTIN ;;
-    22)  sig_name=TTOU ;;
-  esac
-
-  echo "$sig_name";
 }
