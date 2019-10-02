@@ -16,6 +16,7 @@ PS_HYDRATE=5
 PS_DIR=6
 
 # Git stuff
+PS_LOADING_NEW_DIR=7
 PS_GIT_LOADED=8
 PS_GIT_REPO=9
 PS_LOCAL_BRANCH=10
@@ -30,9 +31,14 @@ PS_NUM_UNSTAGED=18
 PS_NUM_UNTRACKED=19
 PS_STASHES=20
 
+# When initially loading prompt start out by loading dir
+psvar[$PS_LOADING_NEW_DIR]=1
+
 gitstatus_callback() {
+  psvar[$PS_LOADING_NEW_DIR]=""
   if [[ "$VCS_STATUS_RESULT" != 'ok-async' ]]; then
-    psvar[9]=""
+    psvar[$PS_LOADING_NEW_DIR]=""
+    psvar[$PS_GIT_REPO]=""
     unset VCS_STATUS_RESULT
     zle && zle reset-prompt
     return 0
@@ -42,6 +48,7 @@ gitstatus_callback() {
     (( $2 )) && psvar[$1]="$2" || psvar[$1]=""
   }
 
+  psvar[$PS_LOADING_NEW_DIR]=""
   psvar[$PS_GIT_LOADED]="1"
   psvar[$PS_GIT_REPO]="1"
   psvar[$PS_LOCAL_BRANCH]="${VCS_STATUS_LOCAL_BRANCH}"
@@ -60,6 +67,11 @@ gitstatus_callback() {
   zle && zle reset-prompt
 }
 
+chpwd() {
+  psvar[$PS_LOADING_NEW_DIR]="1"
+  psvar[$PS_GIT_REPO]=""
+}
+
 precmd() {
   # echo start precmd $EPOCHREALTIME
   # return_code=$(print -P "%?")
@@ -74,7 +86,8 @@ precmd() {
   psvar[$PS_NICE_EXIT_CODE]="$RETVAL"
   # echo after exit code before virtual env $EPOCHREALTIME
   if [ "$VIRTUAL_ENV" != "" ]; then
-    psvar[$PS_VIRTUAL_ENV]="$(basename "$VIRTUAL_ENV") "
+    psvar[$PS_VIRTUAL_ENV]="${VIRTUAL_ENV:t} "
+    # psvar[$PS_VIRTUAL_ENV]="$(basename "$VIRTUAL_ENV") "
   else
     psvar[$PS_VIRTUAL_ENV]=""
   fi
@@ -101,6 +114,9 @@ precmd() {
   # echo before gitstatus_query $EPOCHREALTIME
   psvar[$PS_GIT_LOADED]=""
   [ -z "$VCS_STATUS_RESULT" ] && gitstatus_query -d $PWD -c gitstatus_callback -t 0 'MY'
+  case $VCS_STATUS_RESULT in
+    norepo-sync) echo sync && gitstatus_callback
+  esac
   # echo after gitstatus_query $EPOCHREALTIME
 }
 
@@ -143,7 +159,8 @@ build_git_prompt() {
   RETVAL+="%(${PS_NUM_UNTRACKED}V.${C_BLUE}…%${PS_NUM_UNTRACKED}v%f.)"
   RETVAL+="%(${PS_STASHES}V.${C_YELLOW}!%${PS_STASHES}v%f.)"
   RETVAL+="$C_PAREN" # suffix
-  RETVAL+=".)" # if no git prompt don't display anything
+  RETVAL+=".%(${PS_LOADING_NEW_DIR}V. %F{$C_LOADING}(loading)%f.)"
+  RETVAL+=")"
 }
 
 VIRTUAL_ENV_DISABLE_PROMPT=1
