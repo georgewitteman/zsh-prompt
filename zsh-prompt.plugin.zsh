@@ -36,7 +36,7 @@ psvar[$PS_LOADING_NEW_DIR]=1
 
 gitstatus_callback() {
   psvar[$PS_LOADING_NEW_DIR]=""
-  if [[ "$VCS_STATUS_RESULT" != 'ok-async' ]]; then
+  if [[ "$VCS_STATUS_RESULT" != ok-* ]]; then
     psvar[$PS_LOADING_NEW_DIR]=""
     psvar[$PS_GIT_REPO]=""
     unset VCS_STATUS_RESULT
@@ -115,7 +115,8 @@ precmd() {
   psvar[$PS_GIT_LOADED]=""
   [ -z "$VCS_STATUS_RESULT" ] && gitstatus_query -d $PWD -c gitstatus_callback -t 0 'MY'
   case $VCS_STATUS_RESULT in
-    norepo-sync) echo sync && gitstatus_callback
+    # tout) ;;
+    norepo-sync|ok-sync) gitstatus_callback ;;
   esac
   # echo after gitstatus_query $EPOCHREALTIME
 }
