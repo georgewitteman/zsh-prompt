@@ -46,9 +46,9 @@ gitstatus_callback() {
   psvar[$PS_LOCAL_BRANCH]="${VCS_STATUS_LOCAL_BRANCH}"
   psvar[$PS_TAG]="${VCS_STATUS_TAG}"
   psvar[$PS_COMMIT]="${VCS_STATUS_COMMIT[1,8]}"
+  psvar[$PS_STATUS_ACTION]="${VCS_STATUS_ACTION}"
   set_conditional_ps $PS_COMMITS_BEHIND $VCS_STATUS_COMMITS_BEHIND
   set_conditional_ps $PS_COMMITS_AHEAD $VCS_STATUS_COMMITS_AHEAD
-  set_conditional_ps $PS_STATUS_ACTION $VCS_STATUS_ACTION
   set_conditional_ps $PS_NUM_CONFLICTED $VCS_STATUS_NUM_CONFLICTED
   set_conditional_ps $PS_NUM_STAGED $VCS_STATUS_NUM_STAGED
   set_conditional_ps $PS_NUM_UNSTAGED $VCS_STATUS_NUM_UNSTAGED
@@ -149,10 +149,10 @@ VIRTUAL_ENV_DISABLE_PROMPT=1
 PROMPT=""
 PROMPT+="%(${PS_VIRTUAL_ENV}V.%F{247}%${PS_VIRTUAL_ENV}v %f.)"
 PROMPT+="%B%F{cyan}%~%b%f" # Path
-PROMPT+="$(build_git_prompt)"
-PROMPT+="%(1j. %F{yellow}%j:bg%f.)" # Jobs
-PROMPT+="%(${PS_HYDRATE}v. %F{blue}%${PS_HYDRATE}v%f.)"
-PROMPT+="%(0?..%F{red}) %#%f " # Prompt char (red if last non-zero exit status)
+PROMPT+="$(build_git_prompt) "
+PROMPT+="%(1j.%F{yellow}%j:bg%f .)" # Jobs
+PROMPT+="%(${PS_HYDRATE}V.%F{blue}%${PS_HYDRATE}v%f .)"
+PROMPT+="%(0?..%F{red})%#%f " # Prompt char (red if last non-zero exit status)
 
 # Right prompt
 RPROMPT=""
