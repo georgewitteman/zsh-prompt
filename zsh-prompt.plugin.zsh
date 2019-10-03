@@ -90,7 +90,7 @@ chpwd() {
 # }
 
 precmd() {
-  prompt_start_precmd="${$(($EPOCHREALTIME*1000000))[0,-5]}"
+  prompt_start_precmd="${$(($EPOCHREALTIME*1000000))[0,-2]}"
   return_code=$?
 
   # benchmark_start
@@ -140,7 +140,7 @@ precmd() {
   esac
   # benchmark_end gitstatus:
 
-  prompt_start_render="${$(($EPOCHREALTIME*1000000))[0,-5]}"
+  prompt_start_render="${$(($EPOCHREALTIME*1000000))[0,-2]}"
 }
 
 build_git_prompt() {
