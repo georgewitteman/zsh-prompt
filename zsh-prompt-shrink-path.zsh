@@ -109,8 +109,8 @@ shrink_path () {
       break
     }
     expn=(a b)
-    part=''
-    i=0
+    part="${dir[1]}"
+    i=1
     until [[ (( ${#expn} == 1 )) || $dir = $expn || $i -gt 99 ]] do
       (( i++ ))
       part+=$dir[$i]

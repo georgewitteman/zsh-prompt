@@ -7,14 +7,22 @@ parse_tool_versions() {
   local file_name=$2
   # echo $name $file_name
   if [ -f "$file_name" ]; then
-    local version=${${(ps: :)$(fgrep "$name" "$file_name")}[2]}
+    for line in "${(@f)"$(<"$file_name")"}"; do
+      line_contents=(${(ps: :)line})
+      # echo ${line_contents[1]}
+      if [ "${line_contents[1]}" = "$name" ] && [ "${line_contents[2]}" != "" ]; then
+        retval="${line_contents[2]}"
+        return 0
+      fi
+    done
+    # local version=${${(ps: :)$(fgrep "$name" "$file_name")}[2]}
     # echo version $version
-    if [ "$version" != "" ]; then
-      retval=$version
-      return 0
-    else
-      return 1
-    fi
+    # if [ "$version" != "" ]; then
+    #   retval=$version
+    #   return 0
+    # else
+    #   return 1
+    # fi
   fi
   return 1
 }

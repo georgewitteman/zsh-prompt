@@ -1,9 +1,17 @@
+# benchmark_start
 MY_PROMPT_DIR="${0:a:h}"
 
+# benchmark_start
 source "$MY_PROMPT_DIR/zsh-prompt-nice-exit-code.zsh"
+# benchmark_end nice_exit_code:
+# benchmark_start
 source "$MY_PROMPT_DIR/zsh-prompt-tool-versions.zsh"
+# benchmark_end tool_versions:
+# benchmark_start
 source "$MY_PROMPT_DIR/zsh-prompt-shrink-path.zsh"
+# benchmark_end shrink_path:
 
+# benchmark_end stuff
 gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
 
 type should_drink >/dev/null 2>&1 && HYDRATE_INSTALLED=1
@@ -72,35 +80,48 @@ chpwd() {
   psvar[$PS_GIT_REPO]=""
 }
 
+# benchmark_start() {
+#   _start_time=$(($EPOCHREALTIME*1000000))
+# }
+
+# benchmark_end() {
+#   local now=$(($EPOCHREALTIME*1000000))
+#   # echo "$1 ${$(( $now - $_start_time ))[0,-2]}ns"
+# }
+
 precmd() {
-  # echo start precmd $EPOCHREALTIME
-  # return_code=$(print -P "%?")
+  prompt_start_precmd="${$(($EPOCHREALTIME*1000000))[0,-5]}"
   return_code=$?
+
+  # benchmark_start
   shrink_path
-  # shrink_path --last --tilde
-  # shrink_path --last
   psvar[$PS_DIR]="$RETVAL"
-  # echo after return code before exit code $EPOCHREALTIME
-  # psvar=()
+  # benchmark_end shrink_path:
+
+  # benchmark_start
   nice_exit_code $return_code
   psvar[$PS_NICE_EXIT_CODE]="$RETVAL"
-  # echo after exit code before virtual env $EPOCHREALTIME
-  if [ "$VIRTUAL_ENV" != "" ]; then
-    psvar[$PS_VIRTUAL_ENV]="${VIRTUAL_ENV:t} "
-    # psvar[$PS_VIRTUAL_ENV]="$(basename "$VIRTUAL_ENV") "
-  else
-    psvar[$PS_VIRTUAL_ENV]=""
-  fi
-  # echo after virtual env $EPOCHREALTIME
+  # benchmark_end nice_exit_code:
 
+  # benchmark_start
+  psvar[$PS_VIRTUAL_ENV]="${VIRTUAL_ENV:t}"
+  # if [ "$VIRTUAL_ENV" != "" ]; then
+  #   psvar[$PS_VIRTUAL_ENV]="${VIRTUAL_ENV:t} "
+  # else
+  #   psvar[$PS_VIRTUAL_ENV]=""
+  # fi
+  # benchmark_end virtual_env
+
+  # benchmark_start
   get_python_version
   psvar[$PS_PYTHON_VERSION]=$retval
+  # benchmark_end python_version:
+
+  # benchmark_start
   get_node_version
   psvar[$PS_NODE_VERSION]=$retval
-  # psvar[$PS_PYTHON_VERSION]=$(get_python_version)
-  # psvar[$PS_NODE_VERSION]=$(get_node_version)
+  # benchmark_end node_version:
 
-  # echo before hydrate $EPOCHREALTIME
   if [ "$HYDRATE_INSTALLED" != "0" ]; then
     should_drink
     if [ "$SHOULD_DRINK" != "0" ]; then
@@ -109,16 +130,17 @@ precmd() {
       psvar[$PS_HYDRATE]=""
     fi
   fi
-  # echo after hydratei $EPOCHREALTIME
 
-  # echo before gitstatus_query $EPOCHREALTIME
+  # benchmark_start
   psvar[$PS_GIT_LOADED]=""
   [ -z "$VCS_STATUS_RESULT" ] && gitstatus_query -d $PWD -c gitstatus_callback -t 0 'MY'
   case $VCS_STATUS_RESULT in
     # tout) ;;
     norepo-sync|ok-sync) gitstatus_callback ;;
   esac
-  # echo after gitstatus_query $EPOCHREALTIME
+  # benchmark_end gitstatus:
+
+  prompt_start_render="${$(($EPOCHREALTIME*1000000))[0,-5]}"
 }
 
 build_git_prompt() {
@@ -144,7 +166,7 @@ build_git_prompt() {
   RETVAL+="%(${PS_COMMITS_BEHIND}V.${C_DEFAULT}↓%f.)"
   RETVAL+="%(${PS_COMMITS_AHEAD}V.${C_DEFAULT}↑%f.)"
 
-  # Separator
+  # Show the separator if there's anything on the left side
   RETVAL+="%(${PS_STATUS_ACTION}V.$SEP."
   RETVAL+="%(${PS_NUM_CONFLICTED}V.$SEP."
   RETVAL+="%(${PS_NUM_STAGED}V.$SEP."
@@ -166,6 +188,7 @@ build_git_prompt() {
 
 VIRTUAL_ENV_DISABLE_PROMPT=1
 
+# benchmark_start
 PROMPT=""
 PROMPT+="%(${PS_VIRTUAL_ENV}V.%F{247}%${PS_VIRTUAL_ENV}v %f.)"
 PROMPT+="%B%F{cyan}%${PS_DIR}v%b%f" # Path
@@ -180,5 +203,5 @@ RPROMPT=""
 RPROMPT+="%(0?..%F{red}%(1V.%1v:%?.%?)%f)" # Show nice exit code or just #
 RPROMPT+="%(${PS_NODE_VERSION}V. %F{green}node:%${PS_NODE_VERSION}v%f.)"
 RPROMPT+="%(${PS_PYTHON_VERSION}V. %F{yellow}python:%${PS_PYTHON_VERSION}v%f.)"
-
+# benchmark_end set_var:
 
