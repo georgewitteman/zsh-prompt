@@ -1,6 +1,8 @@
 My ZSH Prompt
 =============
 
+Renders in `1.52ms` :)
+
 ## Timings
 There are currently two files in the `test/` directory.
 
