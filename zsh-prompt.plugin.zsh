@@ -1,21 +1,14 @@
-# benchmark_start
 MY_PROMPT_DIR="${0:a:h}"
 
-# benchmark_start
 source "$MY_PROMPT_DIR/zsh-prompt-nice-exit-code.zsh"
-# benchmark_end nice_exit_code:
-# benchmark_start
 source "$MY_PROMPT_DIR/zsh-prompt-tool-versions.zsh"
-# benchmark_end tool_versions:
-# benchmark_start
 source "$MY_PROMPT_DIR/zsh-prompt-shrink-path.zsh"
-# benchmark_end shrink_path:
 
-# benchmark_end stuff
 gitstatus_stop 'MY' && gitstatus_start -s -1 -u -1 -c -1 -d -1 'MY'
 
 type should_drink >/dev/null 2>&1 && HYDRATE_INSTALLED=1
 
+# psvar indexes
 PS_NICE_EXIT_CODE=1
 PS_VIRTUAL_ENV=2
 PS_PYTHON_VERSION=3
@@ -78,49 +71,19 @@ gitstatus_callback() {
 chpwd() {
   psvar[$PS_LOADING_NEW_DIR]="1"
   psvar[$PS_GIT_REPO]=""
+  shrink_path $PS_DIR
 }
 
-# benchmark_start() {
-#   _start_time=$(($EPOCHREALTIME*1000000))
-# }
-
-# benchmark_end() {
-#   local now=$(($EPOCHREALTIME*1000000))
-#   # echo "$1 ${$(( $now - $_start_time ))[0,-2]}ns"
-# }
-
 precmd() {
-  prompt_start_precmd="${$(($EPOCHREALTIME*1000000))[0,-2]}"
   return_code=$?
+  prompt_start_precmd="${$(($EPOCHREALTIME*1000000))[0,-2]}"
 
-  # benchmark_start
-  shrink_path
-  psvar[$PS_DIR]="$RETVAL"
-  # benchmark_end shrink_path:
+  nice_exit_code $return_code $PS_NICE_EXIT_CODE
 
-  # benchmark_start
-  nice_exit_code $return_code
-  psvar[$PS_NICE_EXIT_CODE]="$RETVAL"
-  # benchmark_end nice_exit_code:
-
-  # benchmark_start
   psvar[$PS_VIRTUAL_ENV]="${VIRTUAL_ENV:t}"
-  # if [ "$VIRTUAL_ENV" != "" ]; then
-  #   psvar[$PS_VIRTUAL_ENV]="${VIRTUAL_ENV:t} "
-  # else
-  #   psvar[$PS_VIRTUAL_ENV]=""
-  # fi
-  # benchmark_end virtual_env
 
-  # benchmark_start
-  get_python_version
-  psvar[$PS_PYTHON_VERSION]=$retval
-  # benchmark_end python_version:
-
-  # benchmark_start
-  get_node_version
-  psvar[$PS_NODE_VERSION]=$retval
-  # benchmark_end node_version:
+  get_python_version $PS_PYTHON_VERSION
+  get_node_version $PS_NODE_VERSION
 
   if [ "$HYDRATE_INSTALLED" != "0" ]; then
     should_drink
@@ -131,26 +94,24 @@ precmd() {
     fi
   fi
 
-  # benchmark_start
   psvar[$PS_GIT_LOADED]=""
   [ -z "$VCS_STATUS_RESULT" ] && gitstatus_query -d $PWD -c gitstatus_callback -t 0 'MY'
   case $VCS_STATUS_RESULT in
     # tout) ;;
     norepo-sync|ok-sync) gitstatus_callback ;;
   esac
-  # benchmark_end gitstatus:
 
   prompt_start_render="${$(($EPOCHREALTIME*1000000))[0,-2]}"
 }
 
 build_git_prompt() {
   C_LOADING="241"
-  C_DEFAULT="%F{%(${PS_GIT_LOADED}V.default.$C_LOADING)}"
-  C_MAGENTA="%F{%(${PS_GIT_LOADED}V.magenta.$C_LOADING)}"
-  C_RED="%F{%(${PS_GIT_LOADED}V.red.$C_LOADING)}"
-  C_GREEN="%F{%(${PS_GIT_LOADED}V.green.$C_LOADING)}"
-  C_BLUE="%F{%(${PS_GIT_LOADED}V.blue.$C_LOADING)}"
-  C_YELLOW="%F{%(${PS_GIT_LOADED}V.yellow.$C_LOADING)}"
+  C_DEFAULT="%F{%(${PS_GIT_LOADED}V.7.$C_LOADING)}"
+  C_MAGENTA="%F{%(${PS_GIT_LOADED}V.13.$C_LOADING)}"
+  C_RED="%F{%(${PS_GIT_LOADED}V.9.$C_LOADING)}"
+  C_GREEN="%F{%(${PS_GIT_LOADED}V.10.$C_LOADING)}"
+  C_BLUE="%F{%(${PS_GIT_LOADED}V.12.$C_LOADING)}"
+  C_YELLOW="%F{%(${PS_GIT_LOADED}V.11.$C_LOADING)}"
 
   O_PAREN="${C_DEFAULT}(%f"
   C_PAREN="${C_DEFAULT})%f"
@@ -187,21 +148,26 @@ build_git_prompt() {
 }
 
 VIRTUAL_ENV_DISABLE_PROMPT=1
+chpwd
 
-# benchmark_start
 PROMPT=""
-PROMPT+="%(${PS_VIRTUAL_ENV}V.%F{247}%${PS_VIRTUAL_ENV}v %f.)"
-PROMPT+="%B%F{cyan}%${PS_DIR}v%b%f" # Path
+if [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_CLIENT" ]; then
+  PROMPT+="%F{15}%K{cyan} SSH %k%f "
+fi
+PROMPT+="%(0?..%K{red}%F{15} %(1V.%1v:%?.%?) %f%k )" # Show nice exit code or just #
+PROMPT+="%(${PS_VIRTUAL_ENV}V.%F{242}%${PS_VIRTUAL_ENV}v %f.)"
+PROMPT+="%B%F{cyan}%(${PS_DIR}V.%${PS_DIR}v.%~)%b%f" # Short path if available, else %~
 build_git_prompt
 PROMPT+="$RETVAL "
 PROMPT+="%(1j.%F{yellow}%j:bg%f .)" # Jobs
 PROMPT+="%(${PS_HYDRATE}V.%F{blue}%${PS_HYDRATE}v%f .)"
-PROMPT+="%(0?..%F{red})%#%f " # Prompt char (red if last non-zero exit status)
+PROMPT+="%(3L.%F{yellow}%L+%f .)" # Show a + if I'm in a subshell (set to 3 bc tmux)
+PROMPT+="%# " # Prompt char
+
+# Continuation prompt
+PROMPT2='%F{242}%_… %f>%f '
 
 # Right prompt
 RPROMPT=""
-RPROMPT+="%(0?..%F{red}%(1V.%1v:%?.%?)%f)" # Show nice exit code or just #
 RPROMPT+="%(${PS_NODE_VERSION}V. %F{green}node:%${PS_NODE_VERSION}v%f.)"
 RPROMPT+="%(${PS_PYTHON_VERSION}V. %F{yellow}python:%${PS_PYTHON_VERSION}v%f.)"
-# benchmark_end set_var:
-

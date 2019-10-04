@@ -30,9 +30,6 @@
 #  https://www.zsh.org/mla/workers/2009/msg00419.html
 
 shrink_path () {
-  unset RETVAL
-  typeset -g RETVAL
-
   setopt localoptions
   setopt rc_quotes null_glob
 
@@ -41,59 +38,12 @@ shrink_path () {
   typeset -i tilde=1
   typeset -i named=0
 
-#   if zstyle -t ':prompt:shrink_path' fish; then
-#     lastfull=1
-#     short=1
-#     tilde=1
-#   fi
-#   if zstyle -t ':prompt:shrink_path' nameddirs; then
-#     tilde=1
-#     named=1
-#   fi
-#   zstyle -t ':prompt:shrink_path' last && lastfull=1
-#   zstyle -t ':prompt:shrink_path' short && short=1
-#   zstyle -t ':prompt:shrink_path' tilde && tilde=1
-
-#   while [[ $1 == -* ]]; do
-#     case $1 in
-#       -f|--fish)
-#         lastfull=1
-#         short=1
-#         tilde=1
-#       ;;
-#       -h|--help)
-#         print 'Usage: shrink_path [-f -l -s -t] [directory]'
-#         print ' -f, --fish  fish-simulation, like -l -s -t'
-#         print ' -l, --last  Print the last directory''s full name'
-#         print ' -s, --short  Truncate directory names to the first character'
-#         print ' -t, --tilde  Substitute ~ for the home directory'
-#         print ' -T, --nameddirs Substitute named directories as well'
-#         print 'The long options can also be set via zstyle, like'
-#         print ' zstyle :prompt:shrink_path fish yes'
-#         return 0
-#       ;;
-#       -l|--last) lastfull=1 ;;
-#       -s|--short) short=1 ;;
-#       -t|--tilde) tilde=1 ;;
-#       -T|--nameddirs)
-#         tilde=1
-#         named=1
-#       ;;
-#     esac
-#     shift
-#   done
-
   typeset -a tree expn
-  typeset result part dir=${1-$PWD}
+  typeset result part dir=$PWD
   typeset -i i
 
   [[ -d $dir ]] || return 0
 
-  # if (( named )) {
-  #   for part in ${(k)nameddirs}; {
-  #     [[ $dir == ${nameddirs[$part]}(/*|) ]] && dir=${dir/#${nameddirs[$part]}/\~$part}
-  #   }
-  # }
   (( tilde )) && dir=${dir/#$HOME/\~}
   tree=(${(s:/:)dir})
   if [[ $tree[1] == \~* ]] {
@@ -121,7 +71,7 @@ shrink_path () {
     full_dir+="/$dir"
     shift tree
   }
-  RETVAL=${result:-/}
+  psvar[$1]=${result:-/}
 }
 
 ## vim:ft=zsh
