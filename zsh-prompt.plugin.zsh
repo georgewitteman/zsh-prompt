@@ -76,7 +76,7 @@ chpwd() {
 
 precmd() {
   return_code=$?
-  prompt_start_precmd="${$(($EPOCHREALTIME*1000000))[0,-2]}"
+  prompt_start_precmd="$EPOCHREALTIME"
 
   nice_exit_code $return_code $PS_NICE_EXIT_CODE
 
@@ -101,7 +101,7 @@ precmd() {
     norepo-sync|ok-sync) gitstatus_callback ;;
   esac
 
-  prompt_start_render="${$(($EPOCHREALTIME*1000000))[0,-2]}"
+  prompt_start_render="$EPOCHREALTIME"
 }
 
 build_git_prompt() {
