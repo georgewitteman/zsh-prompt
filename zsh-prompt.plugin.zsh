@@ -10,7 +10,7 @@ type should_drink >/dev/null 2>&1 && HYDRATE_INSTALLED=1
 
 # psvar indexes
 PS_NICE_EXIT_CODE=1
-PS_VIRTUAL_ENV=2
+# PS_VIRTUAL_ENV=2
 PS_PYTHON_VERSION=3
 PS_NODE_VERSION=4
 PS_HYDRATE=5
@@ -80,7 +80,7 @@ precmd() {
 
   nice_exit_code $return_code $PS_NICE_EXIT_CODE
 
-  psvar[$PS_VIRTUAL_ENV]="${VIRTUAL_ENV:t}"
+  # psvar[$PS_VIRTUAL_ENV]="${VIRTUAL_ENV:t}"
 
   get_python_version $PS_PYTHON_VERSION
   get_node_version $PS_NODE_VERSION
@@ -120,47 +120,53 @@ build_git_prompt() {
   TAG="${C_DEFAULT}#%f${C_MAGENTA}%${PS_TAG}v%f"
   COMMIT_HASH="${C_DEFAULT}@%f${C_MAGENTA}%${PS_COMMIT}v%f"
 
-  RETVAL=''
-  RETVAL+="%(${PS_GIT_REPO}V." # if we have a git prompt
-  RETVAL+=" $O_PAREN" # prefix
-  RETVAL+="%(${PS_LOCAL_BRANCH}V.$BRANCH_NAME.%(${PS_TAG}V.$TAG.$COMMIT_HASH))"
-  RETVAL+="%(${PS_COMMITS_BEHIND}V.${C_DEFAULT}↓%f.)"
-  RETVAL+="%(${PS_COMMITS_AHEAD}V.${C_DEFAULT}↑%f.)"
+  REPLY=''
+  REPLY+="%(${PS_GIT_REPO}V." # if we have a git prompt
+  REPLY+=" $O_PAREN" # prefix
+  REPLY+="%(${PS_LOCAL_BRANCH}V.$BRANCH_NAME.%(${PS_TAG}V.$TAG.$COMMIT_HASH))"
+  REPLY+="%(${PS_COMMITS_BEHIND}V.${C_DEFAULT}↓%f.)"
+  REPLY+="%(${PS_COMMITS_AHEAD}V.${C_DEFAULT}↑%f.)"
 
   # Show the separator if there's anything on the left side
-  RETVAL+="%(${PS_STATUS_ACTION}V.$SEP."
-  RETVAL+="%(${PS_NUM_CONFLICTED}V.$SEP."
-  RETVAL+="%(${PS_NUM_STAGED}V.$SEP."
-  RETVAL+="%(${PS_NUM_UNSTAGED}V.$SEP."
-  RETVAL+="%(${PS_NUM_UNTRACKED}V.$SEP."
-  RETVAL+="%(${PS_STASHES}V.$SEP."
-  RETVAL+="))))))"
+  REPLY+="%(${PS_STATUS_ACTION}V.$SEP."
+  REPLY+="%(${PS_NUM_CONFLICTED}V.$SEP."
+  REPLY+="%(${PS_NUM_STAGED}V.$SEP."
+  REPLY+="%(${PS_NUM_UNSTAGED}V.$SEP."
+  REPLY+="%(${PS_NUM_UNTRACKED}V.$SEP."
+  REPLY+="%(${PS_STASHES}V.$SEP."
+  REPLY+="))))))"
 
-  RETVAL+="%(${PS_STATUS_ACTION}V.${C_RED}%${PS_STATUS_ACTION}v%f.)"
-  RETVAL+="%(${PS_NUM_CONFLICTED}V.${C_MAGENTA}✖%${PS_NUM_CONFLICTED}v%f.)"
-  RETVAL+="%(${PS_NUM_STAGED}V.${C_GREEN}✚%${PS_NUM_STAGED}v%f.)"
-  RETVAL+="%(${PS_NUM_UNSTAGED}V.${C_RED}✚%${PS_NUM_UNSTAGED}v%f.)"
-  RETVAL+="%(${PS_NUM_UNTRACKED}V.${C_BLUE}…%${PS_NUM_UNTRACKED}v%f.)"
-  RETVAL+="%(${PS_STASHES}V.${C_YELLOW}!%${PS_STASHES}v%f.)"
-  RETVAL+="$C_PAREN" # suffix
-  RETVAL+=".%(${PS_LOADING_NEW_DIR}V. %F{$C_LOADING}(loading)%f.)"
-  RETVAL+=")"
+  REPLY+="%(${PS_STATUS_ACTION}V.${C_RED}%${PS_STATUS_ACTION}v%f.)"
+  REPLY+="%(${PS_NUM_CONFLICTED}V.${C_MAGENTA}✖%${PS_NUM_CONFLICTED}v%f.)"
+  REPLY+="%(${PS_NUM_STAGED}V.${C_GREEN}✚%${PS_NUM_STAGED}v%f.)"
+  REPLY+="%(${PS_NUM_UNSTAGED}V.${C_RED}✚%${PS_NUM_UNSTAGED}v%f.)"
+  REPLY+="%(${PS_NUM_UNTRACKED}V.${C_BLUE}…%${PS_NUM_UNTRACKED}v%f.)"
+  REPLY+="%(${PS_STASHES}V.${C_YELLOW}!%${PS_STASHES}v%f.)"
+  REPLY+="$C_PAREN" # suffix
+  REPLY+=".%(${PS_LOADING_NEW_DIR}V. %F{$C_LOADING}(loading)%f.)"
+  REPLY+=")"
 }
 
 VIRTUAL_ENV_DISABLE_PROMPT=1
 chpwd
 
+setopt PROMPT_SUBST
+
 PROMPT=""
-if [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [ -n "$SSH_CLIENT" ]; then
-  PROMPT+="%F{15}%K{cyan} SSH %k%f "
-fi
+
+# SSH
+PROMPT+='${${_FP_IS_SSH::="${SSH_TTY}${SSH_CONNECTION}${SSH_CLIENT}"}+}'
+PROMPT+='${_FP_IS_SSH:+"%F{15}%K{cyan} SSH %k%f "}'
+
 PROMPT+="%(0?..%K{red}%F{15} %(1V.%1v:%?.%?) %f%k )" # Show nice exit code or just #
-PROMPT+="%(${PS_VIRTUAL_ENV}V.%F{242}%${PS_VIRTUAL_ENV}v %f.)"
+PROMPT+='${VIRTUAL_ENV:+"%F{242}${VIRTUAL_ENV:t}%f "}' # Virtual env
 PROMPT+="%B%F{cyan}%(${PS_DIR}V.%${PS_DIR}v.%~)%b%f" # Short path if available, else %~
+
 build_git_prompt
-PROMPT+="$RETVAL "
+PROMPT+="$REPLY " # Git prompt
+
 PROMPT+="%(1j.%F{yellow}%j:bg%f .)" # Jobs
-PROMPT+="%(${PS_HYDRATE}V.%F{blue}%${PS_HYDRATE}v%f .)"
+PROMPT+="%(${PS_HYDRATE}V.%F{blue}%${PS_HYDRATE}v%f .)" # Hydrate
 PROMPT+="%(3L.%F{yellow}%L+%f .)" # Show a + if I'm in a subshell (set to 3 bc tmux)
 PROMPT+="%# " # Prompt char
 
