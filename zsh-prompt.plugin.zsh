@@ -44,14 +44,15 @@ PROMPT+='${${_FP_IS_SSH::="${SSH_TTY}${SSH_CONNECTION}${SSH_CLIENT}"}+}'
 PROMPT+='${_FP_IS_SSH:+"%F{15}%K{cyan} SSH %k%f "}'
 
 # Exit code
-PROMPT+='${${status:#0}:+"%K{red}%F{15} ${signals[$status-127]:+"${signals[$status-127]}:"}$status %k%f "}'
+PROMPT+='${${status:#0}:+"%K{red}%F{15} ${signals[$status-127]:-$status} %k%f "}'
+# PROMPT+='${${status:#0}:+"%K{red}%F{15} ${signals[$status-127]:+"${signals[$status-127]}:"}$status %k%f "}'
 
 # Virtual env
 VIRTUAL_ENV_DISABLE_PROMPT=1
 PROMPT+='${VIRTUAL_ENV:+"%F{242}${VIRTUAL_ENV:t}%f "}'
 
 # Short path if available
-PROMPT+="%B%F{cyan}%(${PS_DIR}V.%${PS_DIR}v.%~) %b%f"
+PROMPT+="%F{cyan}%(${PS_DIR}V.%${PS_DIR}v.%~) %f"
 
 # Background jobs
 PROMPT+="%(1j.%F{yellow}%j:bg%f .)" # Jobs
@@ -64,6 +65,9 @@ PROMPT+="%(3L.%F{yellow}%L+%f .)" # Show a + if I'm in a subshell (set to 3 bc t
 
 # Prompt character
 PROMPT+="%# "
+# PROMPT+="%F{magenta}%#%f "
+# PROMPT+="%F{magenta}❯%f "
+# PROMPT+="%F{magenta}➜%f "
 
 # Continuation prompt
 PROMPT2='%F{242}%_… %f>%f '

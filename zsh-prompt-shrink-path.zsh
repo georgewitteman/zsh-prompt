@@ -3,7 +3,7 @@ shrink_path () {
   setopt rc_quotes null_glob
 
   typeset -a tree expn
-  typeset result part dir=${PWD#$HOME/\~}
+  typeset result part dir=${PWD/#$HOME/\~}
   typeset -i i
 
   tree=(${(s:/:)dir})
