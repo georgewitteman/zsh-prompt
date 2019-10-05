@@ -169,6 +169,7 @@ PROMPT+="%(1j.%F{yellow}%j:bg%f .)" # Jobs
 PROMPT+="%(${PS_HYDRATE}V.%F{blue}%${PS_HYDRATE}v%f .)" # Hydrate
 PROMPT+="%(3L.%F{yellow}%L+%f .)" # Show a + if I'm in a subshell (set to 3 bc tmux)
 PROMPT+="%# " # Prompt char
+# PROMPT+="➜ " # Prompt char
 
 # Continuation prompt
 PROMPT2='%F{242}%_… %f>%f '
