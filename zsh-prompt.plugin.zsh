@@ -1,13 +1,11 @@
 MY_PROMPT_DIR="${0:a:h}"
 
 source "$MY_PROMPT_DIR/zsh-prompt-tool-versions.zsh"
-source "$MY_PROMPT_DIR/zsh-prompt-git-head.zsh"
 source "$MY_PROMPT_DIR/zsh-prompt-shrink-path.zsh"
 
 type should_drink >/dev/null 2>&1 && HYDRATE_INSTALLED=1
 
 PS_NICE_EXIT_CODE=1
-PS_GIT_HEAD=2
 PS_PYTHON_VERSION=3
 PS_NODE_VERSION=4
 PS_HYDRATE=5
@@ -20,7 +18,6 @@ chpwd() {
 precmd() {
   prompt_start_precmd="$EPOCHREALTIME"
 
-  prompt_git_head $PS_GIT_HEAD
   get_python_version $PS_PYTHON_VERSION
   get_node_version $PS_NODE_VERSION
 
@@ -73,6 +70,5 @@ PROMPT2='%F{242}%_… %f>%f '
 
 # Right prompt
 RPROMPT=""
-RPROMPT+=" %F{246}%${PS_GIT_HEAD}v%f"
 RPROMPT+="%(${PS_NODE_VERSION}V. %F{green}node:%${PS_NODE_VERSION}v%f.)"
 RPROMPT+="%(${PS_PYTHON_VERSION}V. %F{yellow}python:%${PS_PYTHON_VERSION}v%f.)"

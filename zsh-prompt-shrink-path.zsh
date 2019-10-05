@@ -3,12 +3,9 @@ shrink_path () {
   setopt rc_quotes null_glob
 
   typeset -a tree expn
-  typeset result part dir=$PWD
+  typeset result part dir=${PWD#$HOME/\~}
   typeset -i i
 
-  [[ -d $dir ]] || return 0
-
-  dir=${dir/#$HOME/\~}
   tree=(${(s:/:)dir})
   if [[ $tree[1] == \~* ]] {
     result=$tree[1]
@@ -23,8 +20,8 @@ shrink_path () {
       break
     }
     expn=(a b)
-    part="${dir[1]}"
-    i=1
+    part=""
+    i=0
     until [[ (( ${#expn} == 1 )) || $dir = $expn || $i -gt 99 ]] do
       (( i++ ))
       part+=$dir[$i]
