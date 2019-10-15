@@ -1,7 +1,7 @@
 My ZSH Prompt
 =============
 
-Renders in 1-3ms. That's 333 – 1000 fps.
+Only renders in 1-3 ms.
 
 ## How to write a fast ZSH prompt (or other zsh scripts)
 
@@ -16,9 +16,3 @@ There are some commands where it might be obvious that you're doing more complic
 From this, you'll start to be able to narrow down specific lines that are causing the issue. For example, one thing that I did not expect when I was starting this was how slow command substitution was, even for builtin commands. For example, try sourcing `test/pwd-comparison.zsh`. The first two tests use command substitution to set a variable to the current directory (`TESTVAR=$(pwd)`). It turns out that (on my machine at least) this is **135 times** slower than running just `pwd` without command substitution. Even though `$(pwd)` runs in just under 1ms, if its running in a loop that can easily add up. Other common commands like `dirname` take over 2.5ms to run on my machine. Again this might not sound like a lot, but you can see how if these commands are run over and over it could end up taking a lot of time.
 
 In order to try and reduce this, I needed to try and find ways to not use command substitution. The zsh [prompt expansion](http://zsh.sourceforge.net/Doc/Release/Prompt-Expansion.html) and [parameter expansion](http://zsh.sourceforge.net/Doc/Release/Expansion.html#Parameter-Expansion) docs were really helpful here. It turns out that there are a lot of things that zsh can do without ever calling another command. For example, running `VAR=$(dirname $(pwd))` takes about 3.5ms on my computer. Turns out there's a variable `$PWD` that I can use instead of `$(pwd)` which cuts that down to 2.6ms. But the real kicker is that if I get rid of command substitution altogether and use the `:h` parameter expansion flag I can get the same thing in **0.0012ms** by running `VAR=${PWD:h}`! To summarize, changing `VAR=$(dirname $(pwd))` (a pretty safe looking command) into `VAR=${PWD:h}` gave me a **2,770 times speedup**. Again, this few fractions of a millisecond might not sound like much, but when done tens or hundreds of time within a prompt script, it can be the difference between a hundreds of milliseconds prompt and a tens or even single digit milliseconds prompt.
-
-### Why is command substitution so slow?
-**TODO**
-
-## What's next?
-So, now that I have a zsh prompt that renders in under 4ms, I'd like to see if I can get my zsh startup time down. It's at about 100ms right now. Most of that is the [gitstatus](https://github.com/romkatv/gitstatus) plugin initialization. I'm guessing since the creator of gitstatus is also the creator of powerlevel10k it's already pretty optimized, but it's still worth a look.
