@@ -44,7 +44,7 @@ PS1+='${VIRTUAL_ENV:+"%F{242}${VIRTUAL_ENV:t}%f "}'
 PS1+="%B%F{cyan}%1~ %f%b"
 
 # Git HEAD
-PS1+="%(${PS_GIT_HEAD}V.(%F{magenta}%${PS_GIT_HEAD}v%f) .)"
+# PS1+="%(${PS_GIT_HEAD}V.(%F{magenta}%${PS_GIT_HEAD}v%f) .)"
 
 # Background jobs
 PS1+="%(1j.%F{yellow}%j:bg%f .)"
@@ -59,5 +59,14 @@ PS1+="%(0?..%F{red})%#%f "
 PS2='%F{242}%_… %f>%f '
 
 ## Right prompt
+# Don't add the random extra space at the end of the right prompt
+# https://superuser.com/a/726509
+# Turned this off because it messes up the space after the prompt
+# character when not in tmux
+# ZLE_RPROMPT_INDENT=0
+
 # Exit code
 RPS1='%(0?.. %K{red}%F{15} ${signals[$status-127]:-$status} %k%f)'
+
+# Git HEAD
+RPS1+="%(${PS_GIT_HEAD}V. git:%F{magenta}%${PS_GIT_HEAD}v%f.)"
