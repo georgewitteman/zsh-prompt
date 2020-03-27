@@ -56,5 +56,3 @@ for ((i = 0; i < $TEST_COUNT; i++)); do
 done
 startup_diff=$(((($EPOCHREALTIME * 1000) - ($_TIMER * 1000)) / $TEST_COUNT))
 echo "${startup_diff[0,7]}ms"
-
-

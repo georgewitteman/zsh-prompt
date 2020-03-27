@@ -1,3 +1,4 @@
+zmodload zsh/datetime
 setopt prompt_subst
 
 VIRTUAL_ENV_DISABLE_PROMPT=1
@@ -31,7 +32,7 @@ prompt_git_head() {
 prompt_yadm_head() {
   [[ -f "$HOME/.config/yadm/repo.git/HEAD" ]] || return 1
 
-  local head=$(<"$HOME/.config/yadm/repo.git/HEAD")
+  local head=$(<"$HOME/.config/yadm/repo.git/HEAD") &&
   if [[ "$head" == "ref: refs/heads/master" ]]; then
     psvar[$PS_YADM_HEAD]=''
   elif [[ "$head" == 'ref: '* ]]; then
@@ -42,8 +43,12 @@ prompt_yadm_head() {
 }
 
 precmd() {
+  local start now
+  start=$(($EPOCHREALTIME * 1000))
   prompt_git_head
   prompt_yadm_head
+  now=$(($EPOCHREALTIME * 1000))
+  startup_diff=$(($now - $start))
 }
 
 set_prompt_keymap() {
@@ -97,6 +102,8 @@ PROMPT2='%F{242}%_… %f>%f '
 # ZLE_RPROMPT_INDENT=0
 
 RPROMPT=
+
+RPROMPT+='${startup_diff[0,4]}ms'
 
 # Exit code
 RPROMPT+='%(0?.. %K{red}%F{15} ${signals[$status-127]:-$status} %k%f)'

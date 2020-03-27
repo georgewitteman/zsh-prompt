@@ -1,3 +1,4 @@
+zmodload zsh/datetime
 TEST_COUNT=300000
 echo -n "print -P : "
 _TIMER=$EPOCHREALTIME

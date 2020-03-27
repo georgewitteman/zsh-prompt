@@ -1,3 +1,4 @@
+zmodload zsh/datetime
 TEST_COUNT=200000
 echo -n "Testing lots of short variable assignments (BLAH='1' over and over again): "
 _TIMER=$EPOCHREALTIME

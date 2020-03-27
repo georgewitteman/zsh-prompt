@@ -1,3 +1,4 @@
+zmodload zsh/datetime
 TEST_COUNT=1000
 echo -n "command substitution twice: "
 _TIMER=$EPOCHREALTIME
