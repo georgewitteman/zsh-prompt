@@ -1,11 +1,8 @@
-zmodload zsh/datetime
 setopt prompt_subst
 
 VIRTUAL_ENV_DISABLE_PROMPT=1
 PS_GIT_HEAD=1
 PS_YADM_HEAD=2
-# Shell always initializes with keymap main
-PROMPT_KEYMAP="[MAIN]"
 
 prompt_git_head() {
   psvar[$PS_GIT_HEAD]=''
@@ -43,38 +40,12 @@ prompt_yadm_head() {
 }
 
 precmd() {
-  local start now
-  start=$(($EPOCHREALTIME * 1000))
   prompt_git_head
   prompt_yadm_head
-  now=$(($EPOCHREALTIME * 1000))
-  startup_diff=$(($now - $start))
 }
-
-set_prompt_keymap() {
-  case $KEYMAP in
-    main) PROMPT_KEYMAP="[MAIN]" ;;
-    emacs) PROMPT_KEYMAP="[EMACS]" ;;
-    viins) PROMPT_KEYMAP="[VIINS]" ;;
-    vicmd) PROMPT_KEYMAP="[VICMD]" ;;
-    viopp) PROMPT_KEYMAP="[VIOPP]" ;;
-    visual) PROMPT_KEYMAP="[VISUAL]" ;;
-    isearch) PROMPT_KEYMAP="[ISEARCH]" ;;
-    command) PROMPT_KEYMAP="[COMMAND]" ;;
-    *safe) PROMPT_KEYMAP="[.SAFE]" ;;
-  esac
-  zle reset-prompt
-}
-# Executed every time the keymap change
-zle -N zle-keymap-select set_prompt_keymap
-# Executed every time the line editor is started to read a new line of input
-zle -N zle-line-init set_prompt_keymap
 
 ## Left prompt
 PROMPT=''
-# SSH
-PROMPT+='${${_FP_IS_SSH::="${SSH_TTY}${SSH_CONNECTION}${SSH_CLIENT}"}+}'
-PROMPT+='${_FP_IS_SSH:+"%F{15}%K{cyan} SSH %k%f "}'
 
 # Virtual env
 PROMPT+='${VIRTUAL_ENV:+"%F{242}${VIRTUAL_ENV:t}%f "}'
@@ -102,8 +73,6 @@ PROMPT2='%F{242}%_… %f>%f '
 # ZLE_RPROMPT_INDENT=0
 
 RPROMPT=
-
-RPROMPT+='${startup_diff[0,4]}ms'
 
 # Exit code
 RPROMPT+='%(0?.. %K{red}%F{15} ${signals[$status-127]:-$status} %k%f)'
