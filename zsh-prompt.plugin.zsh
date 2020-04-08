@@ -3,9 +3,11 @@ setopt prompt_subst
 VIRTUAL_ENV_DISABLE_PROMPT=1
 PS_GIT_HEAD=1
 PS_YADM_HEAD=2
+PS_GIT_STASHES=3
 
 prompt_git_head() {
   psvar[$PS_GIT_HEAD]=''
+  psvar[$PS_GIT_STASHES]=''
 
   local git_root=$PWD
   # Search up each directory until we get to the root or find one
@@ -24,6 +26,12 @@ prompt_git_head() {
   else
     psvar[$PS_GIT_HEAD]=${head:0:10}
   fi
+
+  # Set # of stashes
+  [[ -f "$git_root/.git/logs/refs/stash" ]] || return
+  local stashes=("${(f)$(<$git_root/.git/logs/refs/stash)}")
+  [[ "${#stashes}" -eq 0 ]] && return
+  psvar[$PS_GIT_STASHES]="${#stashes}"
 }
 
 prompt_yadm_head() {
@@ -82,6 +90,9 @@ RPROMPT+="%(${PS_YADM_HEAD}V. yadm:%F{green}%${PS_YADM_HEAD}v%f.)"
 
 # Git HEAD
 RPROMPT+="%(${PS_GIT_HEAD}V. git:%F{magenta}%${PS_GIT_HEAD}v%f.)"
+
+# Git stashes
+RPROMPT+="%(${PS_GIT_STASHES}V. [%F{yellow}%${PS_GIT_STASHES}v%f stashes].)"
 
 # ZLE keymap
 RPROMPT+=' ${PROMPT_KEYMAP}'
