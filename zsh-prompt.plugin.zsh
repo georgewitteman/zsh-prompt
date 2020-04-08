@@ -1,4 +1,7 @@
+zmodload zsh/datetime
 setopt prompt_subst
+
+SHOW_PROMPT_RENDER_TIME=
 
 VIRTUAL_ENV_DISABLE_PROMPT=1
 PS_GIT_HEAD=1
@@ -48,9 +51,17 @@ prompt_yadm_head() {
 }
 
 precmd() {
+  PROMPT_RENDER_START="$EPOCHREALTIME"
   prompt_git_head
   prompt_yadm_head
 }
+
+zle-line-init() {
+  [[ -z $SHOW_PROMPT_RENDER_TIME ]] && return
+  local diff=$((($EPOCHREALTIME * 1000) - ($PROMPT_RENDER_START * 1000)))
+  PREDISPLAY="${SHOW_PROMPT_RENDER_TIME:+"(${diff[0,4]}ms) "}"
+}
+zle -N zle-line-init
 
 ## Left prompt
 PROMPT=''
