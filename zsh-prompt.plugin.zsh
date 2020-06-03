@@ -142,5 +142,5 @@ RPROMPT+="%(${PS_GIT_HEAD}V. git:%F{magenta}%${PS_GIT_HEAD}v%f.)"
 # Git stashes
 RPROMPT+="%(${PS_GIT_STASHES}V. [%F{yellow}%${PS_GIT_STASHES}v%f stashes].)"
 
-#Time
-RPROMPT+="%D{%l:%M %p}"
+# Time
+RPROMPT+=" %D{%L:%M %p}"
