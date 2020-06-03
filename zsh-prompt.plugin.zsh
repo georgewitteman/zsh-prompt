@@ -54,13 +54,15 @@ prompt_yadm_head() {
 
 precmd() {
   PROMPT_RENDER_START="$EPOCHREALTIME"
+  psvar[$PS_CMD_TIME]=""
 
   prompt_git_head
   prompt_yadm_head
 
   local stop="$EPOCHREALTIME"
-  local start=${_PROMPT_COMMAND_START_TIME:-$PROMPT_RENDER_START}
+  local start=${_PROMPT_COMMAND_START_TIME}
   unset _PROMPT_COMMAND_START_TIME
+  [[ -z "$start" ]] && return
 
   local elapsed=${${(ps:.:)$(( $stop * 1000 - $start * 1000 ))}[1]}
 
@@ -68,11 +70,12 @@ precmd() {
   local seconds=$(( elapsed / 1000 % 60 ))
   local ms=$(( elapsed % 1000 ))
 
-  psvar[$PS_CMD_TIME]=""
   [[ "$_PROMPT_LAST_COMMAND" =~ "^(vim|fg).*$" ]] && return
-  (( minutes > 0 )) && psvar[$PS_CMD_TIME]+="${minutes}m "
-  (( seconds > 0 )) && psvar[$PS_CMD_TIME]+="${seconds}s "
-  psvar[$PS_CMD_TIME]+="${ms}ms"
+  human=()
+  (( minutes > 0 )) && human+=("${minutes}m")
+  (( seconds > 0 )) && human+=("${seconds}s")
+  (( minutes <= 0 )) && human+=("${ms}ms")
+  psvar[$PS_CMD_TIME]="${(j: :)human}"
   if (( minutes > 0 )); then
     psvar[$PS_CMD_COLOR]="red"
   elif (( seconds > 0 )); then
