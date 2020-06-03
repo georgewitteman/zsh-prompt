@@ -7,6 +7,8 @@ VIRTUAL_ENV_DISABLE_PROMPT=1
 PS_GIT_HEAD=1
 PS_YADM_HEAD=2
 PS_GIT_STASHES=3
+PS_CMD_TIME=4
+PS_CMD_COLOR=5
 
 prompt_git_head() {
   psvar[$PS_GIT_HEAD]=''
@@ -52,8 +54,32 @@ prompt_yadm_head() {
 
 precmd() {
   PROMPT_RENDER_START="$EPOCHREALTIME"
+
   prompt_git_head
   prompt_yadm_head
+
+  local stop="$EPOCHREALTIME"
+  local start=${_PROMPT_COMMAND_START_TIME:-$PROMPT_RENDER_START}
+  unset _PROMPT_COMMAND_START_TIME
+
+  local elapsed=${${(ps:.:)$(( $stop * 1000 - $start * 1000 ))}[1]}
+
+  local minutes=$(( elapsed / 1000 / 60 % 60 ))
+  local seconds=$(( elapsed / 1000 % 60 ))
+  local ms=$(( elapsed % 1000 ))
+
+  psvar[$PS_CMD_TIME]=""
+  [[ "$_PROMPT_LAST_COMMAND" =~ "^(vim|fg).*$" ]] && return
+  (( minutes > 0 )) && psvar[$PS_CMD_TIME]+="${minutes}m "
+  (( seconds > 0 )) && psvar[$PS_CMD_TIME]+="${seconds}s "
+  psvar[$PS_CMD_TIME]+="${ms}ms"
+  if (( minutes > 0 )); then
+    psvar[$PS_CMD_COLOR]="red"
+  elif (( seconds > 0 )); then
+    psvar[$PS_CMD_COLOR]="yellow"
+  else
+    psvar[$PS_CMD_COLOR]="green"
+  fi
 }
 
 zle-line-init() {
@@ -62,6 +88,11 @@ zle-line-init() {
   PREDISPLAY="${SHOW_PROMPT_RENDER_TIME:+"(${diff[0,4]}ms) "}"
 }
 zle -N zle-line-init
+
+preexec() {
+  _PROMPT_COMMAND_START_TIME="$EPOCHREALTIME"
+  _PROMPT_LAST_COMMAND="$2"
+}
 
 ## Left prompt
 PROMPT=''
@@ -93,6 +124,9 @@ PROMPT2='%F{242}%_… %f>%f '
 
 RPROMPT=
 
+# Command time
+RPROMPT+="%(${PS_CMD_TIME}V.%F{%${PS_CMD_COLOR}v}%${PS_CMD_TIME}v%f.)"
+
 # Exit code
 RPROMPT+='%(0?.. %K{red}%F{15} ${signals[$status-127]:-$status} %k%f)'
 
@@ -104,3 +138,6 @@ RPROMPT+="%(${PS_GIT_HEAD}V. git:%F{magenta}%${PS_GIT_HEAD}v%f.)"
 
 # Git stashes
 RPROMPT+="%(${PS_GIT_STASHES}V. [%F{yellow}%${PS_GIT_STASHES}v%f stashes].)"
+
+#Time
+RPROMPT+="%D{%l:%M %p}"
