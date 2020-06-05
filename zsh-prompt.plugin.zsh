@@ -62,27 +62,31 @@ precmd() {
   local stop="$EPOCHREALTIME"
   local start=${_PROMPT_COMMAND_START_TIME}
   unset _PROMPT_COMMAND_START_TIME
+
   [[ -z "$start" ]] && return
+  [[ "$_PROMPT_LAST_COMMAND" =~ "^(vim|fg).*$" ]] && return
 
   local elapsed=${${(ps:.:)$(( $stop * 1000 - $start * 1000 ))}[1]}
 
-  local minutes=$(( elapsed / 1000 / 60 % 60 ))
-  local seconds=$(( elapsed / 1000 % 60 ))
-  local ms=$(( elapsed % 1000 ))
+  local split=("${elapsed}" 0)
+  local units="ms"
+  psvar[$PS_CMD_COLOR]="green"
 
-  [[ "$_PROMPT_LAST_COMMAND" =~ "^(vim|fg).*$" ]] && return
-  human=()
-  (( minutes > 0 )) && human+=("${minutes}m")
-  (( seconds > 0 )) && human+=("${seconds}s")
-  (( minutes <= 0 )) && human+=("${ms}ms")
-  psvar[$PS_CMD_TIME]="${(j: :)human}"
-  if (( minutes > 0 )); then
+  if (( $elapsed >= 1000 * 60 )); then
+    split=("${(ps:.:)$(( elapsed / 1000.0 / 60.0 ))}")
+    units="m"
     psvar[$PS_CMD_COLOR]="red"
-  elif (( seconds > 0 )); then
+  elif (( $elapsed >= 1000 )); then
+    # Seconds
+    split=("${(ps:.:)$(( elapsed / 1000.0 ))}")
+    units="s"
     psvar[$PS_CMD_COLOR]="yellow"
-  else
-    psvar[$PS_CMD_COLOR]="green"
   fi
+  psvar[$PS_CMD_TIME]="${split[1]}"
+  if (( ${split[2][1]} != 0 )); then
+    psvar[$PS_CMD_TIME]+=".${split[2][1]}"
+  fi
+  psvar[$PS_CMD_TIME]+="${units}"
 }
 
 zle-line-init() {
