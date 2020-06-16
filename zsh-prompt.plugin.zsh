@@ -4,11 +4,15 @@ setopt prompt_subst
 SHOW_PROMPT_RENDER_TIME=
 
 VIRTUAL_ENV_DISABLE_PROMPT=1
-PS_GIT_HEAD=1
-PS_YADM_HEAD=2
+
+PS_YADM_HEAD=1
+
+PS_GIT_HEAD=2
 PS_GIT_STASHES=3
-PS_CMD_TIME=4
-PS_CMD_COLOR=5
+PS_GIT_STASH_WORD=4
+
+PS_CMD_TIME=5
+PS_CMD_COLOR=6
 
 prompt_git_head() {
   psvar[$PS_GIT_HEAD]=''
@@ -36,7 +40,12 @@ prompt_git_head() {
   [[ -f "$git_root/.git/logs/refs/stash" ]] || return
   local stashes=("${(f)$(<$git_root/.git/logs/refs/stash)}")
   [[ "${#stashes}" -eq 0 ]] && return
-  psvar[$PS_GIT_STASHES]="${#stashes}"
+    psvar[$PS_GIT_STASHES]="${#stashes}"
+  if [[ "${#stashes}" -eq 1 ]]; then
+    psvar[$PS_GIT_STASH_WORD]="stash"
+  else
+    psvar[$PS_GIT_STASH_WORD]="stashes"
+  fi
 }
 
 prompt_yadm_head() {
@@ -144,7 +153,7 @@ RPROMPT+="%(${PS_YADM_HEAD}V. yadm:%F{green}%${PS_YADM_HEAD}v%f.)"
 RPROMPT+="%(${PS_GIT_HEAD}V. git:%F{magenta}%${PS_GIT_HEAD}v%f.)"
 
 # Git stashes
-RPROMPT+="%(${PS_GIT_STASHES}V. [%F{yellow}%${PS_GIT_STASHES}v%f stashes].)"
+RPROMPT+="%(${PS_GIT_STASHES}V. [%F{yellow}%${PS_GIT_STASHES}v%f %${PS_GIT_STASH_WORD}v].)"
 
 # Time
 RPROMPT+=" %D{%L:%M %p}"
