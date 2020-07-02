@@ -22,24 +22,41 @@ prompt_shrink_path() {
   local i
   for i in {${#${PWD//[^\/]/}}..1}; do
     local dir="${PWD:F:$((i-1)):h}"
+    # echo
+    # echo "dir: $dir"
+    # echo "dir:t: ${dir:t}"
+    # echo "i: $i"
+    # echo "psvar: $psvar[$PS_WD]"
     psvar[$PS_WD]+='/'
 
     if [[ "$dir" = "$HOME" ]]; then
+      # echo 'inside1'
       psvar[$PS_WD]='~'
       continue
     elif [[ "$i" -eq 1 ]]; then
+      # echo 'inside2'
       # Final path part
       psvar[$PS_WD]+="${PWD:t}"
       break
     elif [[ "${${dir:t}[1]}" = '.' ]]; then
+      # echo 'inside3'
       # Directories that start with "." should have at least 1 letter
       psvar[$PS_WD]+='.'
     fi
 
     local matches=()
-    until [[ "${#matches}" -eq 1 || "${dir:t}" = "$matches" ]]; do
+    # Until:
+    #  - The path only matches one directory
+    #  - There is no more specific path
+    # echo "#psvar:t: ${#${psvar[$PS_WD]}:t}"
+    # echo "psvar:t: ${${psvar[$PS_WD]}:t}"
+    # echo '------'
+    until [[ "${#matches}" -eq 1 || "${dir:t}" = "${${psvar[$PS_WD]}:t}" ]]; do
       psvar[$PS_WD]+="${${dir:t}[$(( ${#psvar[$PS_WD]##*/} + 1))]}"
       matches=("${dir:h}/${psvar[$PS_WD]:t}"*(-/))
+      # echo "matches: $matches"
+      # echo "psvar: ${psvar[$PS_WD]}"
+      # echo '------'
     done
   done
 }
