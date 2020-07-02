@@ -14,6 +14,36 @@ PS_GIT_STASH_WORD=4
 PS_CMD_TIME=5
 PS_CMD_COLOR=6
 
+PS_WD=7
+
+prompt_shrink_path() {
+  psvar[$PS_WD]=''
+
+  local i
+  for i in {${#${PWD//[^\/]/}}..1}; do
+    local dir="${PWD:F:$((i-1)):h}"
+    psvar[$PS_WD]+='/'
+
+    if [[ "$dir" = "$HOME" ]]; then
+      psvar[$PS_WD]='~'
+      continue
+    elif [[ "$i" -eq 1 ]]; then
+      # Final path part
+      psvar[$PS_WD]+="${PWD:t}"
+      break
+    elif [[ "${${dir:t}[1]}" = '.' ]]; then
+      # Directories that start with "." should have at least 1 letter
+      psvar[$PS_WD]+='.'
+    fi
+
+    local matches=()
+    until [[ "${#matches}" -eq 1 || "${dir:t}" = "$matches" ]]; do
+      psvar[$PS_WD]+="${${dir:t}[$(( ${#psvar[$PS_WD]##*/} + 1))]}"
+      matches=("${dir:h}/${psvar[$PS_WD]:t}"*(-/))
+    done
+  done
+}
+
 prompt_git_head() {
   psvar[$PS_GIT_HEAD]=''
   psvar[$PS_GIT_STASHES]=''
@@ -67,6 +97,7 @@ precmd() {
 
   prompt_git_head
   prompt_yadm_head
+  prompt_shrink_path
 
   local stop="$EPOCHREALTIME"
   local start=${_PROMPT_COMMAND_START_TIME}
@@ -117,7 +148,7 @@ PROMPT=''
 PROMPT+='${VIRTUAL_ENV:+"%F{242}${VIRTUAL_ENV:t}%f "}'
 
 # Short path if available
-PROMPT+="%B%F{cyan}%1~ %f%b"
+PROMPT+="%B%F{cyan}%${PS_WD}v %f%b"
 
 # Background jobs
 PROMPT+="%(1j.%F{yellow}%j:bg%f .)"
