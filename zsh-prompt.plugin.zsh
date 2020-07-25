@@ -8,11 +8,12 @@ ps_yadm_head=1
 ps_git_head=2
 ps_git_stashes=3
 ps_git_stash_word=4
+ps_git_branching=5
 
-ps_cmd_time=5
-ps_cmd_color=6
+ps_cmd_time=6
+ps_cmd_color=7
 
-ps_pwd=7
+ps_pwd=8
 
 prompt-shrink-path() {
   psvar[$ps_pwd]=
@@ -45,9 +46,10 @@ prompt-shrink-path() {
   done
 }
 
-prompt-git-head() {
+prompt-git() {
   psvar[$ps_git_head]=
   psvar[$ps_git_stashes]=
+  psvar[$ps_git_branching]=
 
   # Search up each directory until we get to the root or find one
   # that has a git repository
@@ -65,6 +67,27 @@ prompt-git-head() {
     psvar[$ps_git_head]=${head##ref: refs\/heads\/}
   else
     psvar[$ps_git_head]=${head:0:10}
+  fi
+
+  # Branching state
+  if [[ -f "$git_root/.git/rebase-merge/interactive" ]]; then
+    psvar[$ps_git_branching]="rebase-i"
+  elif [[ -d "$git_root/.git/rebase-merge" ]]; then
+    psvar[$ps_git_branching]="rebase-m"
+  else
+    if [[ -d "$git_root/.git/rebase-apply" ]]; then
+      if [[ -f "$git_root/rebase-apply/rebasing" ]]; then
+        psvar[$ps_git_branching]="rebase"
+      elif [[ -f "$git_root/.git/rebase-apply/applying" ]]; then
+        psvar[$ps_git_branching]="am"
+      else
+        psvar[$ps_git_branching]="am/r"
+      fi
+    elif [[ -f "$git_root/.git/MERGE_HEAD" ]]; then
+      psvar[$ps_git_branching]="merge"
+    elif [[ -f "$git_root/.git/BISECT_LOG" ]]; then
+      psvar[$ps_git_branching]="bisect"
+    fi
   fi
 
   # Set # of stashes
@@ -124,7 +147,7 @@ prompt-cmd-time() {
 }
 
 prompt-precmd() {
-  prompt-git-head
+  prompt-git
   prompt-yadm-head
   prompt-shrink-path
   prompt-cmd-time
@@ -181,7 +204,7 @@ RPROMPT+='%(0?.. %K{red}%F{15} ${signals[$status-127]:-$status} %k%f)'
 RPROMPT+="%(${ps_yadm_head}V. yadm:%F{green}%${ps_yadm_head}v%f.)"
 
 # Git HEAD
-RPROMPT+="%(${ps_git_head}V. git:%F{magenta}%${ps_git_head}v%f.)"
+RPROMPT+="%(${ps_git_head}V. %F{magenta}%${ps_git_head}v%f%(${ps_git_branching}V.:%F{yellow}%${ps_git_branching}v%f.).)"
 
 # Git stashes
 RPROMPT+="%(${ps_git_stashes}V. [%F{yellow}%${ps_git_stashes}v%f %${ps_git_stash_word}v].)"
