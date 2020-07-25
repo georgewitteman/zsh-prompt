@@ -19,27 +19,19 @@ PS_WD=7
 prompt_shrink_path() {
   psvar[$PS_WD]=''
 
-  local i
+  local i dir
   for i in {${#${PWD//[^\/]/}}..1}; do
-    local dir="${PWD:F:$((i-1)):h}"
-    # echo
-    # echo "dir: $dir"
-    # echo "dir:t: ${dir:t}"
-    # echo "i: $i"
-    # echo "psvar: $psvar[$PS_WD]"
+    dir="${PWD:F:$((i-1)):h}"
     psvar[$PS_WD]+='/'
 
     if [[ "$dir" = "$HOME" ]]; then
-      # echo 'inside1'
       psvar[$PS_WD]='~'
       continue
     elif [[ "$i" -eq 1 ]]; then
-      # echo 'inside2'
       # Final path part
       psvar[$PS_WD]+="${PWD:t}"
       break
     elif [[ "${${dir:t}[1]}" = '.' ]]; then
-      # echo 'inside3'
       # Directories that start with "." should have at least 1 letter
       psvar[$PS_WD]+='.'
     fi
@@ -48,15 +40,9 @@ prompt_shrink_path() {
     # Until:
     #  - The path only matches one directory
     #  - There is no more specific path
-    # echo "#psvar:t: ${#${psvar[$PS_WD]}:t}"
-    # echo "psvar:t: ${${psvar[$PS_WD]}:t}"
-    # echo '------'
     until [[ "${#matches}" -eq 1 || "${dir:t}" = "${${psvar[$PS_WD]}:t}" ]]; do
       psvar[$PS_WD]+="${${dir:t}[$(( ${#psvar[$PS_WD]##*/} + 1))]}"
       matches=("${dir:h}/${psvar[$PS_WD]:t}"*(-/))
-      # echo "matches: $matches"
-      # echo "psvar: ${psvar[$PS_WD]}"
-      # echo '------'
     done
   done
 }
@@ -65,15 +51,15 @@ prompt_git_head() {
   psvar[$PS_GIT_HEAD]=''
   psvar[$PS_GIT_STASHES]=''
 
-  local git_root=$PWD
+  local git_root="$PWD"
   # Search up each directory until we get to the root or find one
   # that has a git repository
-  until [[ -d "${git_root}/.git" ]] || [[ "$git_root" = "/" ]]; do
+  until [[ "$git_root" = "/" || -d "${git_root}/.git" ]]; do
     git_root=${git_root:a:h}
   done
 
   # Check if we found a git repo
-  [[ -f "${git_root}/.git/HEAD" ]] || return 1
+  [[ "$git_root" != "/" && -f "${git_root}/.git/HEAD" ]] || return 1
 
   # Read contents of HEAD file
   local head=$(<"${git_root}/.git/HEAD")
@@ -84,8 +70,8 @@ prompt_git_head() {
   fi
 
   # Set # of stashes
-  [[ -f "$git_root/.git/logs/refs/stash" ]] || return
-  local stashes=("${(f)$(<$git_root/.git/logs/refs/stash)}")
+  [[ -f "${git_root}/.git/logs/refs/stash" ]] || return
+  local stashes=("${(f)$(<${git_root}/.git/logs/refs/stash)}")
   [[ "${#stashes}" -eq 0 ]] && return
     psvar[$PS_GIT_STASHES]="${#stashes}"
   if [[ "${#stashes}" -eq 1 ]]; then
@@ -121,7 +107,6 @@ precmd() {
   unset _PROMPT_COMMAND_START_TIME
 
   [[ -z "$start" ]] && return
-  [[ "$_PROMPT_LAST_COMMAND" =~ "^(vim|fg).*$" ]] && return
 
   local elapsed=${${(ps:.:)$(( $stop * 1000 - $start * 1000 ))}[1]}
 
@@ -130,6 +115,7 @@ precmd() {
   psvar[$PS_CMD_COLOR]="green"
 
   if (( $elapsed >= 1000 * 60 )); then
+    # Minutes
     split=("${(ps:.:)$(( elapsed / 1000.0 / 60.0 ))}")
     units="m"
     psvar[$PS_CMD_COLOR]="red"
@@ -155,7 +141,6 @@ zle -N zle-line-init
 
 preexec() {
   _PROMPT_COMMAND_START_TIME="$EPOCHREALTIME"
-  _PROMPT_LAST_COMMAND="$2"
 }
 
 ## Left prompt
