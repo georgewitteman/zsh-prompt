@@ -140,7 +140,7 @@ prompt-cmd-time() {
     psvar[$ps_cmd_color]="yellow"
   fi
   psvar[$ps_cmd_time]="${split[1]}"
-  if (( ${split[2][1]} != 0 )); then
+  if [[ "${split[2][1]}" != 0 ]]; then
     psvar[$ps_cmd_time]+=".${split[2][1]}"
   fi
   psvar[$ps_cmd_time]+="$units"
