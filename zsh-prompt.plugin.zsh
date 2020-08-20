@@ -215,5 +215,6 @@ RPROMPT+=" %D{%L:%M %p}"
 # Don't add the random extra space at the end of the right prompt
 # https://superuser.com/a/726509
 # Turned this off because it messes up the space after the prompt
-# character when not in tmux
-# ZLE_RPROMPT_INDENT=0
+# character when not in tmux.
+# Turned this back on because it doesn't seem to be an issue now.
+ZLE_RPROMPT_INDENT=0
