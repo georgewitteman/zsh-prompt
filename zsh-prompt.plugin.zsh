@@ -3,8 +3,6 @@ setopt prompt_subst
 
 VIRTUAL_ENV_DISABLE_PROMPT=1
 
-ps_yadm_head=1
-
 ps_git_head=2
 ps_git_stashes=3
 ps_git_stash_word=4
@@ -103,19 +101,6 @@ prompt-git() {
   fi
 }
 
-prompt-yadm-head() {
-  [[ -f "${HOME}/.config/yadm/repo.git/HEAD" ]] || return 1
-
-  local head=$(<"${HOME}/.config/yadm/repo.git/HEAD") &&
-  if [[ "$head" == "ref: refs/heads/master" ]]; then
-    psvar[$ps_yadm_head]=''
-  elif [[ "$head" == 'ref: '* ]]; then
-    psvar[$ps_yadm_head]=${head##ref: refs\/heads\/}
-  else
-    psvar[$ps_yadm_head]=${head:0:10}
-  fi
-}
-
 prompt-cmd-time() {
   psvar[$ps_cmd_time]=
 
@@ -148,7 +133,6 @@ prompt-cmd-time() {
 
 prompt-precmd() {
   prompt-git
-  prompt-yadm-head
   prompt-shrink-path
   prompt-cmd-time
 }
@@ -199,9 +183,6 @@ RPROMPT+="%(${ps_cmd_time}V.%F{%${ps_cmd_color}v}%${ps_cmd_time}v%f.)"
 
 # Exit code
 RPROMPT+='%(0?.. %K{red}%F{15} ${signals[$status-127]:-$status} %k%f)'
-
-# YADM HEAD if not master
-RPROMPT+="%(${ps_yadm_head}V. yadm:%F{green}%${ps_yadm_head}v%f.)"
 
 # Git HEAD
 RPROMPT+="%(${ps_git_head}V. %F{magenta}%${ps_git_head}v%f%(${ps_git_branching}V.:%F{yellow}%${ps_git_branching}v%f.).)"
