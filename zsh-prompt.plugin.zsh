@@ -159,7 +159,7 @@ PROMPT=''
 PROMPT+='${VIRTUAL_ENV:+"%F{242}${VIRTUAL_ENV:t}%f "}'
 
 # Short path if available
-PROMPT+="%B%F{cyan}%${ps_pwd}v %f%b"
+PROMPT+="%F{cyan}%${ps_pwd}v %f%b"
 
 # Background jobs
 PROMPT+="%(1j.%F{yellow}%j:bg%f .)"
