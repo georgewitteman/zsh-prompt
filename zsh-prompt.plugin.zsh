@@ -1,4 +1,3 @@
-zmodload zsh/datetime
 setopt prompt_subst
 
 VIRTUAL_ENV_DISABLE_PROMPT=1
@@ -106,23 +105,22 @@ prompt-cmd-time() {
 
   [[ -z "$PROMPT_START_TIME" ]] && return
 
-  local elapsed="${${(ps:.:)$(( ($EPOCHREALTIME - $PROMPT_START_TIME) * 1000 ))}[1]}"
+  local elapsed="$(( SECONDS - PROMPT_START_TIME ))"
   unset PROMPT_START_TIME
 
-  local split=("$elapsed" 0)
-  local units="ms"
-  psvar[$ps_cmd_color]="green"
+  if [[ "$elapsed" -lt 1 ]]; then
+    return
+  fi
 
-  if (( $elapsed >= 1000 * 60 )); then
+  local split=("$elapsed" 0)
+  local units="s"
+  psvar[$ps_cmd_color]="yellow"
+
+  if (( elapsed >=  60 )); then
     # Minutes
-    split=("${(ps:.:)$(( elapsed / 1000.0 / 60.0 ))}")
+    split=("${(ps:.:)$(( elapsed / 60.0 ))}")
     units="m"
     psvar[$ps_cmd_color]="red"
-  elif (( $elapsed >= 1000 )); then
-    # Seconds
-    split=("${(ps:.:)$(( elapsed / 1000.0 ))}")
-    units="s"
-    psvar[$ps_cmd_color]="yellow"
   fi
   psvar[$ps_cmd_time]="${split[1]}"
   if [[ "${split[2][1]}" != 0 ]]; then
@@ -139,6 +137,7 @@ prompt-precmd() {
 
 prompt-preexec() {
   PROMPT_START_TIME="$EPOCHREALTIME"
+  PROMPT_START_TIME="$SECONDS"
 }
 
 [[ -z "${precmd_functions+1}" ]] && precmd_functions=()
