@@ -12,6 +12,8 @@ ps_cmd_color=7
 
 ps_pwd=8
 
+ps_venv_name=9
+
 prompt-shrink-path() {
   psvar[$ps_pwd]=
 
@@ -129,10 +131,25 @@ prompt-cmd-time() {
   psvar[$ps_cmd_time]+="$units"
 }
 
+prompt-venv-name() {
+  psvar[$ps_venv_name]=
+  if [[ -z "${VIRTUAL_ENV:-}" ]]; then
+    return
+  fi
+
+  if [[ -n "${ATT_ROOT:-}" && "${VIRTUAL_ENV##${ATT_ROOT}}" != "${VIRTUAL_ENV}" ]]; then
+    psvar[$ps_venv_name]="${VIRTUAL_ENV:h:h:t}"
+    return
+  fi
+
+  psvar[$ps_venv_name]="${VIRTUAL_ENV:t2}"
+}
+
 prompt-precmd() {
+  prompt-cmd-time
   prompt-git
   prompt-shrink-path
-  prompt-cmd-time
+  prompt-venv-name
 }
 
 prompt-preexec() {
@@ -155,7 +172,7 @@ fi
 PROMPT=''
 
 # Virtual env
-PROMPT+='${VIRTUAL_ENV:+"%F{242}${VIRTUAL_ENV:t}%f "}'
+PROMPT+="%(${ps_venv_name}V.%F{242}%${ps_venv_name}v%f .)"
 
 # Short path if available
 PROMPT+="%F{cyan}%${ps_pwd}v %f%b"
