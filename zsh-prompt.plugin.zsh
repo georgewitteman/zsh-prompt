@@ -191,6 +191,10 @@ PROMPT+="%(0?..%F{red})%#%f "
 PROMPT2='%F{242}%_… %f>%f '
 
 
+# set -x
+PS4="%B%D{%H:%M:%S.%9.} +%N:%i>%b "
+
+
 ## Right prompt
 RPROMPT=
 
