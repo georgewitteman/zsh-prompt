@@ -1,217 +1,42 @@
-setopt prompt_subst
-
-VIRTUAL_ENV_DISABLE_PROMPT=1
-
-ps_git_head=2
-ps_git_stashes=3
-ps_git_stash_word=4
-ps_git_branching=5
-
-ps_cmd_time=6
-ps_cmd_color=7
-
-ps_pwd=8
-
-ps_venv_name=9
-
-prompt-shrink-path() {
-  psvar[$ps_pwd]=
-
-  local i dir matches
-  for i in {${#${PWD//[^\/]/}}..1}; do
-    dir="${PWD:F:$((i-1)):h}"
-    psvar[$ps_pwd]+='/'
-
-    if [[ "$dir" = "$HOME" ]]; then
-      psvar[$ps_pwd]='~'
-      continue
-    elif [[ "$i" -eq 1 ]]; then
-      # Final path part
-      psvar[$ps_pwd]+="${PWD:t}"
-      break
-    elif [[ "${${dir:t}[1]}" = '.' ]]; then
-      # Directories that start with "." should have at least 1 letter
-      psvar[$ps_pwd]+='.'
-    fi
-
-    matches=()
-    # Until:
-    #  - The path only matches one directory
-    #  - There is no more specific path
-    until [[ "${#matches}" -eq 1 || "${dir:t}" = "${${psvar[$ps_pwd]}:t}" ]]; do
-      psvar[$ps_pwd]+="${${dir:t}[$(( ${#psvar[$ps_pwd]##*/} + 1))]}"
-      matches=("${dir:h}/${psvar[$ps_pwd]:t}"*(-/))
-    done
-  done
-}
-
-prompt-git() {
-  psvar[$ps_git_head]=
-  psvar[$ps_git_stashes]=
-  psvar[$ps_git_branching]=
-
-  # Search up each directory until we get to the root or find one
-  # that has a git repository
-  local git_root="$PWD"
-  until [[ "$git_root" = "/" || -d "${git_root}/.git" ]]; do
-    git_root="${git_root:a:h}"
-  done
-
-  # Check if we found a git repo
-  [[ "$git_root" != "/" && -f "${git_root}/.git/HEAD" ]] || return 1
-
-  # Read contents of HEAD file
-  local head=$(<"${git_root}/.git/HEAD")
-  if [[ "$head" == 'ref: '* ]]; then
-    psvar[$ps_git_head]=${head##ref: refs\/heads\/}
-  else
-    psvar[$ps_git_head]=${head:0:10}
-  fi
-
-  # Branching state
-  if [[ -f "$git_root/.git/rebase-merge/interactive" ]]; then
-    psvar[$ps_git_branching]="rebase-i"
-  elif [[ -d "$git_root/.git/rebase-merge" ]]; then
-    psvar[$ps_git_branching]="rebase-m"
-  else
-    if [[ -d "$git_root/.git/rebase-apply" ]]; then
-      if [[ -f "$git_root/rebase-apply/rebasing" ]]; then
-        psvar[$ps_git_branching]="rebase"
-      elif [[ -f "$git_root/.git/rebase-apply/applying" ]]; then
-        psvar[$ps_git_branching]="am"
-      else
-        psvar[$ps_git_branching]="am/r"
-      fi
-    elif [[ -f "$git_root/.git/MERGE_HEAD" ]]; then
-      psvar[$ps_git_branching]="merge"
-    elif [[ -f "$git_root/.git/BISECT_LOG" ]]; then
-      psvar[$ps_git_branching]="bisect"
-    fi
-  fi
-
-  # Set # of stashes
-  [[ -f "${git_root}/.git/logs/refs/stash" ]] || return
-
-  local stashes=("${(f)$(<${git_root}/.git/logs/refs/stash)}")
-  [[ "${#stashes}" -eq 0 ]] && return
-    psvar[$ps_git_stashes]="${#stashes}"
-  if [[ "${#stashes}" -eq 1 ]]; then
-    psvar[$ps_git_stash_word]="stash"
-  else
-    psvar[$ps_git_stash_word]="stashes"
-  fi
-}
-
-prompt-cmd-time() {
-  psvar[$ps_cmd_time]=
-
-  [[ -z "$PROMPT_START_TIME" ]] && return
-
-  local elapsed="$(( SECONDS - PROMPT_START_TIME ))"
-  unset PROMPT_START_TIME
-
-  if [[ "$elapsed" -lt 1 ]]; then
-    return
-  fi
-
-  local split=("$elapsed" 0)
-  local units="s"
-  psvar[$ps_cmd_color]="yellow"
-
-  if (( elapsed >=  60 )); then
-    # Minutes
-    split=("${(ps:.:)$(( elapsed / 60.0 ))}")
-    units="m"
-    psvar[$ps_cmd_color]="red"
-  fi
-  psvar[$ps_cmd_time]="${split[1]}"
-  if [[ "${split[2][1]}" != 0 ]]; then
-    psvar[$ps_cmd_time]+=".${split[2][1]}"
-  fi
-  psvar[$ps_cmd_time]+="$units"
-}
-
-prompt-venv-name() {
-  psvar[$ps_venv_name]=
-  if [[ -z "${VIRTUAL_ENV:-}" ]]; then
-    return
-  fi
-
-  if [[ -n "${ATT_ROOT:-}" && "${VIRTUAL_ENV##${ATT_ROOT}}" != "${VIRTUAL_ENV}" ]]; then
-    psvar[$ps_venv_name]="${VIRTUAL_ENV:h:h:t}"
-    return
-  fi
-
-  psvar[$ps_venv_name]="${VIRTUAL_ENV:t2}"
-}
-
-prompt-precmd() {
-  prompt-cmd-time
-  prompt-git
-  prompt-shrink-path
-  prompt-venv-name
-}
-
-prompt-preexec() {
-  PROMPT_START_TIME="$EPOCHREALTIME"
-  PROMPT_START_TIME="$SECONDS"
-}
-
-[[ -z "${precmd_functions+1}" ]] && precmd_functions=()
-[[ -z "${preexec_functions+1}" ]] && preexec_functions=()
-
-if [[ ${precmd_functions[(ie)prompt-precmd]} -gt ${#precmd_functions} ]]; then
-    precmd_functions+=(prompt-precmd)
-fi
-if [[ ${preexec_functions[(ie)prompt-preexec]} -gt ${#preexec_functions} ]]; then
-    preexec_functions+=(prompt-preexec)
-fi
-
-
 ## Left prompt
-PROMPT=''
-
-# Virtual env
-PROMPT+="%(${ps_venv_name}V.%F{242}%${ps_venv_name}v%f .)"
+PS1=
 
 # Short path if available
-PROMPT+="%F{cyan}%${ps_pwd}v %f%b"
+PS1+="%F{cyan}%~ %f%b"
 
 # Background jobs
-PROMPT+="%(1j.%F{yellow}%j:bg%f .)"
+PS1+="%(1j.%F{yellow}%j:bg%f .)"
 
 # Subshell warning
-PROMPT+="%(3L.%F{yellow}%L+%f .)"
+PS1+="%("
+if [[ -n "$TMUX" ]]; then
+  # If we're in tmux then we're already in a subshell but it's ok
+  PS1+="3"
+else
+  PS1+="2"
+fi
+PS1+="L.%F{yellow}%L+%f .)"
 
 # Prompt character
-PROMPT+="%(0?..%F{red})%#%f "
+PS1+="%(0?..%F{red})%#%f "
 
 
 ## Continuation prompt
-PROMPT2='%F{242}%_… %f>%f '
+PS2='%F{242}%_… %f>%f '
 
 
-# set -x
+# Execution trace prompt (set -x)
 PS4="%B%D{%H:%M:%S.%9.} +%N:%i>%b "
 
 
 ## Right prompt
-RPROMPT=
-
-# Command time
-RPROMPT+="%(${ps_cmd_time}V.%F{%${ps_cmd_color}v}%${ps_cmd_time}v%f.)"
+RPS1=
 
 # Exit code
-RPROMPT+='%(0?.. %K{red}%F{15} ${signals[$status-127]:-$status} %k%f)'
-
-# Git HEAD
-RPROMPT+="%(${ps_git_head}V. %F{magenta}%${ps_git_head}v%f%(${ps_git_branching}V.:%F{yellow}%${ps_git_branching}v%f.).)"
-
-# Git stashes
-RPROMPT+="%(${ps_git_stashes}V. [%F{yellow}%${ps_git_stashes}v%f %${ps_git_stash_word}v].)"
+RPS1+='%(0?.. %K{red}%F{15} ${signals[$status-127]:-$status} %k%f)'
 
 # Time
-RPROMPT+=" %D{%L:%M %p}"
+RPS1+=" %D{%L:%M %p}"
 
 # Don't add the random extra space at the end of the right prompt
 # https://superuser.com/a/726509
