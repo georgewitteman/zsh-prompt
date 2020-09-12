@@ -33,7 +33,7 @@ PS4="%B%D{%H:%M:%S.%9.} +%N:%i>%b "
 RPS1=
 
 # Exit code
-RPS1+='%(0?.. %K{red}%F{15} ${signals[$status-127]:-$status} %k%f)'
+RPS1+='%(0?.. %K{red}%F{15} %? %k%f)'
 
 # Time
 RPS1+=" %D{%L:%M %p}"
