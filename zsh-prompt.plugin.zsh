@@ -201,7 +201,7 @@ RPROMPT=
 RPROMPT+="%(${ps_cmd_time}V.%F{%${ps_cmd_color}v}%${ps_cmd_time}v%f.)"
 
 # Exit code
-RPROMPT+='%(0?.. %K{red}%F{15} %? %k%f)'
+RPROMPT+='%(0?.. %K{red}%F{15} ${signals[$status-127]+${signals[$status-127]}:}%? %k%f)'
 
 # Git HEAD
 RPROMPT+="%(${ps_git_head}V. %F{magenta}%${ps_git_head}v%f%(${ps_git_branching}V.:%F{yellow}%${ps_git_branching}v%f.).)"
