@@ -14,36 +14,36 @@ ps_pwd=8
 
 ps_venv_name=9
 
-prompt-shrink-path() {
-  psvar[$ps_pwd]=
+# prompt-shrink-path() {
+#   psvar[$ps_pwd]=
 
-  local i dir matches
-  for i in {${#${PWD//[^\/]/}}..1}; do
-    dir="${PWD:F:$((i-1)):h}"
-    psvar[$ps_pwd]+='/'
+#   local i dir matches
+#   for i in {${#${PWD//[^\/]/}}..1}; do
+#     dir="${PWD:F:$((i-1)):h}"
+#     psvar[$ps_pwd]+='/'
 
-    if [[ "$dir" = "$HOME" ]]; then
-      psvar[$ps_pwd]='~'
-      continue
-    elif [[ "$i" -eq 1 ]]; then
-      # Final path part
-      psvar[$ps_pwd]+="${PWD:t}"
-      break
-    elif [[ "${${dir:t}[1]}" = '.' ]]; then
-      # Directories that start with "." should have at least 1 letter
-      psvar[$ps_pwd]+='.'
-    fi
+#     if [[ "$dir" = "$HOME" ]]; then
+#       psvar[$ps_pwd]='~'
+#       continue
+#     elif [[ "$i" -eq 1 ]]; then
+#       # Final path part
+#       psvar[$ps_pwd]+="${PWD:t}"
+#       break
+#     elif [[ "${${dir:t}[1]}" = '.' ]]; then
+#       # Directories that start with "." should have at least 1 letter
+#       psvar[$ps_pwd]+='.'
+#     fi
 
-    matches=()
-    # Until:
-    #  - The path only matches one directory
-    #  - There is no more specific path
-    until [[ "${#matches}" -eq 1 || "${dir:t}" = "${${psvar[$ps_pwd]}:t}" ]]; do
-      psvar[$ps_pwd]+="${${dir:t}[$(( ${#psvar[$ps_pwd]##*/} + 1))]}"
-      matches=("${dir:h}/${psvar[$ps_pwd]:t}"*(-/))
-    done
-  done
-}
+#     matches=()
+#     # Until:
+#     #  - The path only matches one directory
+#     #  - There is no more specific path
+#     until [[ "${#matches}" -eq 1 || "${dir:t}" = "${${psvar[$ps_pwd]}:t}" ]]; do
+#       psvar[$ps_pwd]+="${${dir:t}[$(( ${#psvar[$ps_pwd]##*/} + 1))]}"
+#       matches=("${dir:h}/${psvar[$ps_pwd]:t}"*(-/))
+#     done
+#   done
+# }
 
 prompt-git() {
   psvar[$ps_git_head]=
@@ -148,12 +148,11 @@ prompt-venv-name() {
 prompt-precmd() {
   prompt-cmd-time
   prompt-git
-  prompt-shrink-path
+  # prompt-shrink-path
   prompt-venv-name
 }
 
 prompt-preexec() {
-  PROMPT_START_TIME="$EPOCHREALTIME"
   PROMPT_START_TIME="$SECONDS"
 }
 
@@ -175,7 +174,7 @@ PROMPT=''
 PROMPT+="%(${ps_venv_name}V.%F{242}%${ps_venv_name}v%f .)"
 
 # Short path if available
-PROMPT+="%F{cyan}%${ps_pwd}v %f%b"
+PROMPT+="%F{cyan}%~ %f%b"
 
 # Background jobs
 PROMPT+="%(1j.%F{yellow}%j:bg%f .)"
@@ -191,7 +190,7 @@ PROMPT+="%(0?..%F{red})%#%f "
 PROMPT2='%F{242}%_… %f>%f '
 
 
-# set -x
+## Executation trace prompt (set -x)
 PS4="%B%D{%H:%M:%S.%9.} +%N:%i>%b "
 
 
