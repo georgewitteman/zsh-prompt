@@ -23,25 +23,6 @@ prompt-precmd() {
 
   GIT_PROMPT="%F{magenta}${head}%f"
 
-  # Branching state
-  if [[ -f "$git_root/.git/rebase-merge/interactive" ]]; then
-    GIT_PROMPT+=":%F{yellow}rebase-i%f"
-  elif [[ -d "$git_root/.git/rebase-merge" ]]; then
-    GIT_PROMPT+=":%F{yellow}rebase-m%f"
-  elif [[ -d "$git_root/.git/rebase-apply" ]]; then
-    if [[ -f "$git_root/rebase-apply/rebasing" ]]; then
-      GIT_PROMPT+=":%F{yellow}rebase%f"
-    elif [[ -f "$git_root/.git/rebase-apply/applying" ]]; then
-      GIT_PROMPT+=":%F{yellow}am%f"
-    else
-      GIT_PROMPT+=":%F{yellow}am/r%f"
-    fi
-  elif [[ -f "$git_root/.git/MERGE_HEAD" ]]; then
-    GIT_PROMPT+=":%F{yellow}merge%f"
-  elif [[ -f "$git_root/.git/BISECT_LOG" ]]; then
-    GIT_PROMPT+=":%F{yellow}bisect%f"
-  fi
-
   # Set # of stashes
   [[ -f "${git_root}/.git/logs/refs/stash" ]] || return
 
